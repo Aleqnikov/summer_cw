@@ -1,3 +1,8 @@
+/**
+* @file help_functions.c
+ * @brief  Содержит вспомогательные функции для проверки данных.
+ */
+
 #include "help_functions.h"
 
 /**

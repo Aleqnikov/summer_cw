@@ -991,14 +991,11 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-# Путь к исходным файлам
-INPUT = .
-EXTRACT_ALL = YES
-# Включить рекурсивный поиск по подкаталогам
-RECURSIVE = YES
+INPUT = cli/main.c cli/structures.h cli/checker cli/parcer
 
-# Разрешить только файлы .c и .h
+RECURSIVE = YES
 FILE_PATTERNS = *.c *.h
+EXTRACT_ALL = YES
 
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. Internally Doxygen uses the UTF-8 encoding. Doxygen uses

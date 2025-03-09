@@ -1,5 +1,9 @@
-#include "ornament.h"
+/**
+* @file ornament.c
+ * @brief  Содержит функции для парсинга режима орнамент.
+ */
 
+#include "ornament.h"
 
 /**
  * @brief Данная функция является парсером для орнамента, режима rect, semicircles.

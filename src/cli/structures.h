@@ -1,3 +1,8 @@
+/**
+* @file structures.h
+ * @brief Файл, где содержатся основные структуры и инклуды.
+ */
+
 #ifndef STRUCTURES_H
 #define STRUCTURES_H
 
