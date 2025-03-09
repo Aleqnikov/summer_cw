@@ -1,7 +1,13 @@
 #include "rectangle.h"
 
-int parce_rectangle(int argc, char** argv, object_t* figure){
-
+/**
+ * @brief Данная функция является парсером --rect.
+ * @param figure Указатель на объект.
+ * @param argc Количество аргументов.
+ * @param argv Список аргументов.
+ * @return Ноль если все хорошо, в ином случае код ошибки.
+ */
+int parce_rectangle(int argc, char** argv, object_t* figure) {
     static struct option long_options[] = {
         {"left_up", required_argument, 0, 'l'},
         {"right_down", required_argument, 0, 'r'},
@@ -11,65 +17,57 @@ int parce_rectangle(int argc, char** argv, object_t* figure){
         {"fill_color", required_argument, 0, 'F'},
         {"input", required_argument, 0, 'i'},
         {"output", required_argument, 0, 'o'},
-        {0,0,0,0},
+        {0, 0, 0, 0}
     };
 
     int opt, option_index = 0;
 
-    while((opt = getopt_long(argc, argv, "l:r:t:c:fF:i:o:", long_options, &option_index)) != -1){
+    while ((opt = getopt_long(argc, argv, "l:r:t:c:fF:i:o:", long_options, &option_index)) != -1) {
         switch (opt) {
-            case 'l':
+            case 'l': {
                 int result_l = left_up(figure, argc, argv);
-
                 if (result_l != 0) return result_l;
                 break;
-
-            case 'r':
+            }
+            case 'r': {
                 int result_r = right_down(figure, argc, argv);
-
                 if (result_r != 0) return result_r;
                 break;
-            case 't':
+            }
+            case 't': {
                 int result_t = thickness(figure, argc, argv);
-
                 if (result_t != 0) return result_t;
                 break;
-
-            case 'c':
+            }
+            case 'c': {
                 int result_c = color(figure, argc, argv);
-
                 if (result_c != 0) return result_c;
                 break;
-
+            }
             case 'f':
-                if ( optind < argc && argv[optind][0] != '-') {
-                    fprintf(stderr, "Ошибка: --fill не принимает аргументы!\n");
-                    return -1;
-                }
                 figure->fill = true;
                 break;
-
-            case 'F':
+            case 'F': {
                 int result_f_c = fill_color(figure, argc, argv);
-
                 if (result_f_c != 0) return result_f_c;
                 break;
-            case 'i':
+            }
+            case 'i': {
                 int res_i = input_name(figure, argc, argv);
                 if (res_i != 0) return res_i;
                 break;
-            case 'o':
+            }
+            case 'o': {
                 int res_o = output_name(figure, argc, argv);
                 if (res_o != 0) return res_o;
                 break;
-
+            }
             case '?':
-                fprintf(stderr, "Ошибка: лишние аргументы");
-                break;
+                fprintf(stderr, "Ошибка: некорректный аргумент.\n");
+                return -1;
         }
     }
 
     get_filename(figure, argc, argv);
-
     return 0;
 }
