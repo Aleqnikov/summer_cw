@@ -14,12 +14,12 @@
 /**
  * @brief Перечисление режимов для орнамента.
  */
-typedef enum Pattern {rectangle, circle, semicircle} pattern_t;
+typedef enum Pattern {rectangle, circle, semicircle, none} pattern_t;
 
 /**
  * @brief Перечисление режимов допустимых операций.
  */
-typedef enum Mode {rect, ornament, rotate, circ} mode;
+typedef enum Mode {rect, ornament, rotate, circ, info, help, None} mode;
 
 
 /**
@@ -55,6 +55,35 @@ typedef struct Object {
     int x_center, y_center;                             /** @brief Координаты центра окружности.*/
     int radius;                                         /** @brief Радиус окружности*/
 } object_t ;
+
+/**
+ * @brief Функция конструктор заполняет структуру базовыми значениями, предполагается, что такие значения не могут
+ * получится в случае парсера, поэтому можно будет проверить, ввел ли пользователь тому или иному полю значение.
+ * @param obj Объект, который нужно инициализировать.
+ */
+void constuctor(object_t* obj) {
+    obj->mod = None;
+    obj->start_filename = NULL;
+    obj->finish_filename = "out.bmp";
+    obj->x_left_up = -1;
+    obj->y_left_up = -1;
+    obj->x_right_down = -1;
+    obj->y_right_down = -1;
+    obj->pattern = none;
+    obj->count = -1;
+    obj->angle = -1;
+    obj->x_center = -1;
+    obj->y_center = -1;
+    obj->radius = -1;
+    obj->thinckness = -1;
+    obj->fill = false;
+    obj->color_fill_b = -1;
+    obj->color_fill_r = -1;
+    obj->color_fill_g = -1;
+    obj->color_r = -1;
+    obj->color_g = -1;
+    obj->color_b = -1;
+}
 
 
 /**
@@ -117,6 +146,27 @@ bool is_correct_count_args(int argc, char** argv, char* name) {
         return 1;
     }
 
+    return 0;
+}
+
+/**
+ * @brief Проверяет координаты на корректность, в данном случае количество, и нахождение в первой четверти.
+ * @param x Координата по x.
+ * @param y Координаты по y.
+ * @param count Количество считанных координат.
+ * @return Булевое значение.
+ */
+bool is_correct_coords(int x, int y, int count) {
+    if (count != 2) {
+        fprintf(stderr, "Error: Неккоректные координаты! Их должно быть двое!\n");
+        return 1;
+    }
+
+
+    if (x <= 0 || y <= 0) {
+        fprintf(stderr, "Error: Неккоректные координаты! Должны быть больше нуля!\n");
+        return 1;
+    }
     return 0;
 }
 
@@ -195,12 +245,13 @@ int left_up(object_t* figure, int argc, char** argv) {
     if (result_coords != 0)
         return result_coords;
 
-    int res = sscanf(optarg, "%d.%d", &figure->x_left_up, &figure->y_left_up);
+    int x, y;
+    int res = sscanf(optarg, "%d.%d", &x, &y);
 
-    if (res != 2) {
-        fprintf(stderr, "Error: передано слишком мало аргументов флагу left_up\n");
+    if (is_correct_coords(x, y, res))
         return 1;
-    }
+
+    figure->x_left_up = x; figure->y_left_up = y;
 
     return 0;
 }
@@ -217,14 +268,13 @@ int right_down(object_t* figure, int argc, char** argv) {
     int result_coords = parce_coords(argc, argv, "right_down");
     if (result_coords != 0)
         return result_coords;
+    int x, y;
+    int res = sscanf(optarg, "%d.%d", &x, &y);
 
-    int res = sscanf(optarg, "%d.%d", &figure->x_right_down, &figure->y_right_down);
-
-    if (res != 2) {
-        fprintf(stderr, "Error: передано слишком мало аргументов флагу right_down\n");
+    if (is_correct_coords(x, y, res))
         return 1;
-    }
 
+    figure->x_right_down = x; figure->y_right_down = y;
     return 0;
 }
 
@@ -366,7 +416,7 @@ int angle(object_t* figure, int argc, char** argv) {
         return -1;
     }
 
-    if (figure->thinckness != 90 && figure->thinckness != 180 && figure->thinckness != 270) {
+    if (figure->angle != 90 && figure->angle != 180 && figure->angle != 270) {
         fprintf(stderr, "Ошибка: вы аргументы неправильные для, должны быть 90 или 180 или 270 --angle\n");
         return -1;
     }
@@ -385,14 +435,15 @@ int circle_get(object_t* figure, int argc, char** argv) {
     int result_coords = parce_coords(argc, argv, "--circle");
     if (result_coords != 0) return result_coords;
 
-    int res = sscanf(optarg, "%d.%d", &figure->x_center, &figure->y_center);
+    int x, y;
+    int res = sscanf(optarg, "%d.%d", &x, &y);
 
-    if (res != 2) {
-        fprintf(stderr, "Error: передано слишком мало аргументов флагу --circle\n");
+    if (is_correct_coords(x, y, res))
         return 1;
-    }
 
+    figure->x_center = x; figure->y_center = y;
     return 0;
+
 }
 
 /**
@@ -437,11 +488,6 @@ int count(object_t* figure, int argc, char** argv) {
     int result_args = is_correct_count_args(argc, argv, "--count");
     if (result_args != 0) return result_args;
 
-    int dots = is_correct_dots(optarg, 0);
-    if (dots != 0) {
-        fprintf(stderr, "Error: Вы ввели количество в неправльном формате!.\n");
-        return dots;
-    }
 
     if (!isnumber(optarg)) {
         fprintf(stderr, "Ошибка: вы ввели  не число для --count\n");
@@ -777,15 +823,8 @@ int parce_circle(int argc, char** argv, object_t* figure) {
  * @return Ноль если все хорошо, в ином случае код ошибки.
  */
 int parce_ornament(int argc, char** argv, object_t* figure) {
-    if (!optarg) {
-        fprintf(stderr, "Не был передан тип узора!!!\n");
-        return 1;
-    }
-
-    if (optind < argc && argv[optind][0] != '-') {
-        fprintf(stderr, "Ошибка: вы ввели слишком много аргументов для %s\n", "--ornament");
-        return -1;
-    }
+    int count_args = is_correct_count_args(argc, argv, "--ornament");
+    if (count_args != 0) return count_args;
 
     int is_word = -1;
 
@@ -794,19 +833,19 @@ int parce_ornament(int argc, char** argv, object_t* figure) {
     if (strcmp(optarg, "semicircles") == 0) is_word = 2;
 
     switch (is_word) {
-        case 0: {
+        case rectangle: {
             figure->pattern = rectangle;
             int res_r = ornament_rect_semicrcls(figure, argc, argv);
             if (res_r != 0) return res_r;
             break;
         }
-        case 1: {
+        case circle: {
             figure->pattern = circle;
             int res_c = ornament_circle(figure, argc, argv);
             if (res_c != 0) return res_c;
             break;
         }
-        case 2: {
+        case semicircle: {
             figure->pattern = semicircle;
             int res_s = ornament_rect_semicrcls(figure, argc, argv);
             if (res_s != 0) return res_s;
@@ -826,6 +865,17 @@ void print_help() {
 }
 
 /**
+ * @brief Данная функция проверяет, имеет ли файл расширение .bmp.
+ * @param filename Имя файла.
+ * @return Да или нет
+ */
+bool check_dt_bmp(const char* filename) {
+    size_t len = strlen(filename);
+    return !(len >= 4 && strcmp(filename + len - 4, ".bmp") == 0);
+}
+
+
+/**
  * @brief Данная функция является логической функции парсера, которая проверяет все команды
  * и передаёт их в зависимые функции.
  * @param figure Указатель на объект.
@@ -841,7 +891,7 @@ int base_parser(object_t* figure, int argc, char** argv) {
         {"circle", no_argument, 0, 0},
         {"info", required_argument, 0, 0},
         {"help", no_argument, 0, 'h'},
-        {0, 0, 0, 0},
+        {0, 0, 0, 0}
     };
 
     int opt, option_index = 0;
@@ -849,32 +899,45 @@ int base_parser(object_t* figure, int argc, char** argv) {
 
     if (opt == 'h') {
         print_help();
-        return 0;
+        return 1;
     }
 
     if (opt == 0) {
         int res = 0;
         switch (option_index) {
-            case 0:
+            case rect:
                 figure->mod = rect;
-            res = parce_rectangle(argc, argv, figure);
-            break;
-            case 1:
+                res = parce_rectangle(argc, argv, figure);
+                break;
+            case ornament:
                 figure->mod = ornament;
-            res = parce_ornament(argc, argv, figure);
-            break;
-            case 2:
+                res = parce_ornament(argc, argv, figure);
+                break;
+            case rotate:
                 figure->mod = rotate;
-            res = parce_rotate(argc, argv, figure);
-            break;
-            case 3:
+                res = parce_rotate(argc, argv, figure);
+                break;
+            case circ:
                 figure->mod = circ;
-            res = parce_circle(argc, argv, figure);
-            break;
-            case 4:
-            case 5:
-                printf("option %s\n", long_options[option_index].name);
-            break;
+                res = parce_circle(argc, argv, figure);
+                break;
+            case info:
+                figure->mod = info;
+                if(optarg){
+                    figure->start_filename = optarg;
+                    res = 0;
+                }
+
+                fprintf(stderr, "Error: не было передано название файла!\n");
+                return 1;
+
+            case help:
+                print_help();
+                return 69;
+
+            case '?':
+                fprintf(stderr, "Error: была переданна неизвестная коменда!\n");
+                return 1;
         }
         return res;
     }
@@ -883,12 +946,239 @@ int base_parser(object_t* figure, int argc, char** argv) {
 }
 
 
+/**
+ * @brief Проверят на корректность заполненость цветов для определённого режима.
+ * @param figure Указатель на объект
+ * @return Правда или ложь.
+ */
+bool checker_color(object_t* figure) {
+    if (figure->color_r == -1 || figure->color_g == -1 || figure->color_b == -1) {
+        fprintf(stderr, "Error: Вы не ввели цвет для фигуры!\n");
+        return 1;
+    }
+    return 0;
+}
+
+/**
+ * @brief Данная функция проверяет на корректность заполненость поля thinckness.
+ * @param figure Указатель на объект
+ * @return Правду либо ложь.
+ */
+bool checker_thinckness(object_t* figure) {
+    if (figure->thinckness == -1) {
+        fprintf(stderr, "Error: Вы не ввели толщину линии!\n");
+        return 1;
+    }
+    return 0;
+}
+
+/**
+ * @brief Данная функция проверяет на корректность заполненость полей координат левой точки.
+ * @param figure Указатель на объект
+ * @return Правду либо ложь.
+ */
+bool checker_left_up(object_t* figure) {
+    if (figure->x_left_up == -1 || figure->y_left_up == -1) {
+        fprintf(stderr, "Error: Вы не ввели координаты для левой верхней точки!\n");
+        return 1;
+    }
+    return 0;
+}
+
+/**
+ * @brief Данная функция проверяет на корректность заполненость полей координат правой точки.
+ * @param figure Указатель на объект
+ * @return Правду либо ложь.
+ */
+bool checker_right_down(object_t* figure) {
+    if (figure->x_right_down == -1 || figure->y_right_down == -1) {
+        fprintf(stderr, "Error: Вы не ввели координаты для правой нижней точки!\n");
+        return 1;
+    }
+    return 0;
+}
+
+/**
+ * @brief Данная функция проверяет на корректность заполненость полей заливки и цвета заливки.
+ * @param figure Указатель на объект
+ * @return Правду либо ложь.
+ */
+bool checker_fill(object_t* figure) {
+    if (figure->fill && (figure->color_fill_b == -1 || figure->color_fill_r == -1 || figure->color_fill_g == -1)) {
+        fprintf(stderr, "Error: Вы выбрали режим заливки, но не выбрали цвет!\n");
+        return 1;
+    }
+
+    if (!figure->fill && (figure->color_fill_b != -1 || figure->color_fill_r != -1 || figure->color_fill_g != -1)) {
+        fprintf(stderr, "Error: Вы не выбрали режим заливки, но выбрали цвет!\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Данная функция проверяет корректность заполнености структуры для режима работы --rect.
+ * @param figure Указатель на структуру.
+ * @return Ноль или единица
+ */
+int check_rectangle(object_t* figure) {
+    if (checker_left_up(figure)) return 1;
+
+    if (checker_right_down(figure)) return 1;
+
+    if (checker_thinckness(figure)) return 1;
+
+    if (checker_color(figure)) return 1;
+
+    if (checker_fill(figure)) return 1;
+
+    return 0;
+}
+
+/**
+ * @brief Данная функция проверяет корректность заполнености структуры для режима работы --circle.
+ * @param figure Указатель на структуру.
+ * @return Ноль или единица
+ */
+int check_circle(object_t* figure) {
+    // Проверяем специфические параметры
+    if (figure->x_center == -1 || figure->y_center == -1) {
+        fprintf(stderr, "Error: Вы не выбрали центр окружности!\n");
+        return 1;
+    }
+
+    if (figure->radius == -1 ) {
+        fprintf(stderr, "Error: Вы не выбрали радиус окружности!\n");
+        return 1;
+    }
+
+    if (checker_thinckness(figure)) return 1;
+
+    if (checker_color(figure)) return 1;
+
+    if (checker_fill(figure)) return 1;
+
+    return 0;
+}
+
+/**
+ * @brief Проверят корректность полей для ornament.
+ * @param figure Указатель на объект.
+ * @return Ноль в случае удачи в ином случае единица.
+ */
+int check_ornament(object_t* figure) {
+
+    if (figure->color_r == -1 || figure->color_g == -1 || figure->color_b == -1) {
+        fprintf(stderr, "Error: Вы не ввели цвет для фигуры!\n");
+        return 1;
+    }
+
+    switch (figure->pattern) {
+        case rectangle:
+            if (checker_color(figure)) return 1;
+            if (checker_thinckness(figure)) return 1;
+
+            if (figure->count == -1) {
+                fprintf(stderr, "Error: Вы не ввели количество!\n");
+                return 1;
+            }
+
+            break;
+        case circle: // У него только цвет
+            break;
+        case semicircle:
+            if (checker_color(figure)) return 1;
+            if (checker_thinckness(figure)) return 1;
+            if (figure->count == -1) {
+                fprintf(stderr, "Error: Вы не ввели количество!\n");
+                return 1;
+            }
+            break;
+        default:
+            fprintf(stderr, "Error: Невозможная ошибка в проверка орнамента.\n");
+            return 1
+        ;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Проверят корректность полей для ornament.
+ * @param figure Указатель на объект.
+ * @return Ноль в случае удачи в ином случае единица.
+ */
+int check_rotate(object_t* figure) {
+    if (checker_left_up(figure)) return 1;
+
+    if (checker_right_down(figure)) return 1;
+
+    if (figure->angle == -1 ) {
+        fprintf(stderr, "Error: Вы не выбрали угол поворота!\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Данная функция является проверкой корректности переданнх значений, соответствие режимам и т.п.
+ * Простые проверки производит сама, но более ветвистые перераспределяет по зависимым вспомогательным функциям.
+ * @param figure Указатель на проверяемый объект
+ * @return Если все проверки прошли, то ноль, в ином случае код ошибки.
+ */
+int base_checker(object_t* figure) {
+    if (figure->start_filename == NULL) {
+        fprintf(stderr, "Error: Не было введено имя файла!\n");
+        return 1;
+    }
+
+    if (strcmp(figure->start_filename, figure->finish_filename) == 0) {
+        fprintf(stderr, "Error: Начальные и стартовые имена совпадают!\n");
+        return 1;
+    }
+
+    if (check_dt_bmp(figure->start_filename)) {
+        fprintf(stderr, "Error: Изначальный файл не имеет расширение .bmp!\n");
+        return 1;
+    }
+
+    if (check_dt_bmp(figure->finish_filename)) {
+        fprintf(stderr, "Error: Конечный файл не имеет расширение .bmp!\n");
+        return 1;
+    }
+
+    int res_check = 0;
+    switch (figure->mod) {
+        case rect:
+            res_check = check_rectangle(figure);
+            break;
+        case ornament:
+            res_check = check_ornament(figure);
+            break;
+        case rotate:
+            res_check = check_rotate(figure);
+            break;
+        case circ:
+            res_check = check_circle(figure);
+            break;
+        default:
+            fprintf(stderr, "Error: Невозможная ошибка!\n");
+            return 1;
+    }
+
+    return res_check;
+}
+
 int main(int argc, char* argv[]){
     object_t* figure = malloc(sizeof(object_t));
-    const char* fn = "out.bmp";
-    figure->finish_filename = fn;
+    constuctor(figure);
 
     int res = base_parser(figure, argc, argv);
+    if (res != 0) return 41;
+
+    int result_chek = base_checker(figure);
 
     printf("mod %d\n", figure->mod);
     printf("pattern %d\n", figure->pattern);
