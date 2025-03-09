@@ -1,3 +1,8 @@
+/**
+* @file base_checker.c
+ * @brief  Содержит главную функцию для проверки данных.
+ */
+
 #include "base_checker.h"
 
 /**

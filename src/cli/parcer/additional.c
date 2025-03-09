@@ -1,3 +1,8 @@
+/**
+* @file additional.c
+ * @brief Содержит вспомогательные функции для парсера.
+ */
+
 #include "additional.h"
 
 /**

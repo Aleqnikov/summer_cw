@@ -1,3 +1,8 @@
+/**
+* @file rectangle.c
+ * @brief  Содержит функции для парсинга режима rectangle.
+ */
+
 #include "rectangle.h"
 
 /**

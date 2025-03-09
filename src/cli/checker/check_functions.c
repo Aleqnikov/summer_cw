@@ -1,3 +1,9 @@
+/**
+* @file check_functions.c
+ * @brief  Содержит  функции для проверки данных.
+ */
+
+
 #include "check_functions.h"
 
 /**

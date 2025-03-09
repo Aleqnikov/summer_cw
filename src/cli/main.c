@@ -1,3 +1,8 @@
+/**
+* @file main.с
+ * @brief Файл программы.
+ */
+
 #include "structures.h"
 #include "parcer/parcer.h"
 #include "checker/base_checker.h"

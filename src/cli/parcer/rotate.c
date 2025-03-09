@@ -1,3 +1,8 @@
+/**
+* @file rotate.c
+ * @brief  Содержит функции для парсинга режима rotate.
+ */
+
 #include "rotate.h"
 
 /**
