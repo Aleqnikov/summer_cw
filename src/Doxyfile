@@ -997,6 +997,19 @@ RECURSIVE = YES
 FILE_PATTERNS = *.c *.h
 EXTRACT_ALL = YES
 
+HAVE_DOT = YES
+CALL_GRAPH = YES
+CALLER_GRAPH = YES
+INCLUDE_GRAPH = YES
+INCLUDED_BY_GRAPH = YES
+CLASS_GRAPH = YES
+COLLABORATION_GRAPH = YES
+DOT_IMAGE_FORMAT = png  # Или svg для лучшего качества
+DOTFILE_DIRS = .  # Директория, в которой искать файлы .dot
+DOT_CLEANUP = YES
+
+
+
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. Internally Doxygen uses the UTF-8 encoding. Doxygen uses
 # libiconv (or the iconv built into libc) for the transcoding. See the libiconv
