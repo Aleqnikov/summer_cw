@@ -188,7 +188,7 @@ bool is_correct_count_args(int argc, char** argv, char* name) {
         return 1;
     }
 
-    if (optarg[0] == '-') {
+    if (optarg[0] == '-' && !isdigit(optarg[1])) {
         fprintf(stderr, "Error: вы не ввели аргументы для функции %s!\n", name);
         return 1;
     }
@@ -214,11 +214,6 @@ bool is_correct_coords(int x, int y, int count) {
         return 1;
     }
 
-
-    if (x < 0 || y < 0) {
-        fprintf(stderr, "Error: Неккоректные координаты! Должны быть больше нуля!\n");
-        return 1;
-    }
     return 0;
 }
 
@@ -441,9 +436,24 @@ int output_name(object_t* figure, int argc, char** argv) {
  * @param argv Список аргументов.
  */
 void get_filename(object_t* figure, int argc, char** argv) {
-    if (figure->start_filename == NULL && ((argc - 2 > 0 && argv[argc - 2][0] != '-') || (argv[argc - 2][0] == '-' && argc - 3 == 0) || (figure->fill && (strcmp(argv[argc - 2], "--fill") || (strcmp(argv[argc - 2], "-f"))))) )
+    if (figure->start_filename != NULL) {
+        return;
+    }
+
+    bool has_enough_args = (argc - 2 > 0);
+    bool previous_is_not_flag = (argv[argc - 2][0] != '-');
+    bool only_fill_flag_present = (argv[argc - 2][0] == '-' && argc - 3 == 0);
+    bool is_fill_flag = figure->fill &&
+                        (strcmp(argv[argc - 2], "--fill") == 0 ||
+                         strcmp(argv[argc - 2], "-f") == 0);
+
+    if ((has_enough_args && previous_is_not_flag) ||
+        only_fill_flag_present ||
+        is_fill_flag) {
         figure->start_filename = argv[argc - 1];
+        }
 }
+
 
 /**
  * @brief Функция, которая парсит флаг --angle.
@@ -797,7 +807,7 @@ int parce_ornament(int argc, char** argv, object_t* figure) {
                 if (count_args != 0) return count_args;
 
                 if (!strcmp(optarg, "rectangle")) figure->pattern = rectangle;
-                if (!strcmp(optarg, "semicircle")) figure->pattern = semicircle;
+                if (!strcmp(optarg, "semicircles")) figure->pattern = semicircle;
                 if (!strcmp(optarg, "circle")) figure->pattern = circle;
 
                 if (figure->pattern == none) {
