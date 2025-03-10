@@ -10,7 +10,7 @@
  * @param str строка, которую нужно проверить
  * @return Если есть что то, кроме чисел, то возвращает ноль, иначе единицу.
  */
-bool isnumber(const char *str) {
+bool is_number(const char *str) {
     if (!str || *str == '\0') return 0;
 
     while (*str) {
@@ -209,7 +209,7 @@ int thickness(object_t* figure, int argc, char** argv) {
     int count_args = is_correct_count_args(argc, argv, "--thickness");
     if (count_args != 0) return count_args;
 
-    if (!isnumber(optarg)) {
+    if (!is_number(optarg)) {
         fprintf(stderr, "Ошибка: вы ввели  не число для --thickness\n");
         return -1;
     }
@@ -323,7 +323,7 @@ int angle(object_t* figure, int argc, char** argv) {
     int count_args = is_correct_count_args(argc, argv, "--angle");
     if (count_args != 0) return count_args;
 
-    if (!isnumber(optarg)) {
+    if (!is_number(optarg)) {
         fprintf(stderr, "Ошибка: вы ввели  не число для --angle\n");
         return -1;
     }
@@ -376,7 +376,7 @@ int radius(object_t* figure, int argc, char** argv) {
     int result_coords = parce_coords(argc, argv, "--radius");
     if (result_coords != 0) return result_coords;
 
-    if (!isnumber(optarg)) {
+    if (!is_number(optarg)) {
         fprintf(stderr, "Ошибка: вы ввели  не число для --radius\n");
         return -1;
     }
@@ -408,7 +408,7 @@ int count(object_t* figure, int argc, char** argv) {
     if (result_args != 0) return result_args;
 
 
-    if (!isnumber(optarg)) {
+    if (!is_number(optarg)) {
         fprintf(stderr, "Ошибка: вы ввели  не число для --count\n");
         return -1;
     }

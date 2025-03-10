@@ -3,7 +3,7 @@
 
 #include "parcer.h"
 
-bool isnumber(const char*);
+bool is_number(const char*);
 bool is_correct_dots(const char*, int);
 bool is_correct_count_args(int, char**, char*);
 bool is_correct_coords(int, int, int);

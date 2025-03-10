@@ -85,13 +85,58 @@ void constuctor(object_t* obj) {
     obj->color_b = -1;
 }
 
+void help_print(void) {
+    printf("╭━━╮╭━╮╭━┳━━━╮╭━━━┳━━━┳━━┳━━━━┳━━━┳━━━╮\n"
+            "┃╭╮┃┃┃╰╯┃┃╭━╮┃┃╭━━┻╮╭╮┣┫┣┫╭╮╭╮┃╭━╮┃╭━╮┃\n"
+            "┃╰╯╰┫╭╮╭╮┃╰━╯┃┃╰━━╮┃┃┃┃┃┃╰╯┃┃╰┫┃╱┃┃╰━╯┃\n"
+            "┃╭━╮┃┃┃┃┃┃╭━━╯┃╭━━╯┃┃┃┃┃┃╱╱┃┃╱┃┃╱┃┃╭╮╭╯\n"
+            "┃╰━╯┃┃┃┃┃┃┃╱╱╱┃╰━━┳╯╰╯┣┫┣╮╱┃┃╱┃╰━╯┃┃┃╰╮\n"
+            "╰━━━┻╯╰╯╰┻╯╱╱╱╰━━━┻━━━┻━━╯╱╰╯╱╰━━━┻╯╰━╯\n");
+    printf("\n\n Справка о программе!\n");
+
+    printf("Данная программа обладает флагами:\n"
+           "    -h, --help                                                  Печатает информационную справку.\n"
+           "    --info <file.bmp>                                       Печатает информацию о bmp файле.\n\n"
+           "    --rect  [options]\n"
+           "        -l --left_up <x.y>                                      Устанавливает координаты левой точки.\n"
+           "        -r --right_down <x.y>                                   Устанавливает координаты правой нижней точки.\n"
+           "        -t --thickness <num>                                    Устанавливает толщину линий.\n"
+           "        -с --color <rrr.ggg.bbb>                                Устанавливет цвет линии.\n"
+           "        -f --fill                                               Устанавливает нужна ли заливка.\n"
+           "        -F --fill_color <rrr.ggg.bbb>                           Устанавливает цвета заливки.\n\n"
+           "        -o --output <file.bmp>                                  Устанавливает название выходного файла.\n"
+           "        -i --input <file.bmp>                                   Устанавливает название входного файла.\n"
+           "    --ornament [options] \n"
+           "        -p --pattern [rectangle, circle, cemicircle]            Устанавливает режим орнамента.\n"
+           "        -t --thickness <num>                                    Устанавливает тольщину линии.\n"
+           "        -C --color <rrr.ggg.bbb>                                Устанавливет цвет линии.\n"
+           "        -c --count <num>                                        Устанавливает количество.\n"
+           "        -o --output <file.bmp>                                  Устанавливает название выходного файла.\n"
+           "        -i --input <file.bmp>                                   Устанавливает название входного файла.\n"
+           "    --rotate [options] \n"
+           "        -l --left_up <x.y>                                      Устанавливает координаты левой точки.\n"
+           "        -r --right_down <x.y>                                   Устанавливает координаты правой нижней точки.\n"
+           "        -a --angle <num>                                        Устанавливает угол, может быть 90, 180, 270\n"
+           "        -o --output <file.bmp>                                  Устанавливает название выходного файла.\n"
+           "        -i --input <file.bmp>                                   Устанавливает название входного файла.\n"
+           "    --circle [options]\n"
+           "        -c --center <x.y>                                       Устанавливает центр окружности.\n"
+           "        -r --radius <num>                                       Устанавливает радиус окружности.\n"
+           "        -t --thickness <num>                                    Устанавливает толщину линий.\n"
+           "        -С --color <rrr.ggg.bbb>                                Устанавливет цвет линии.\n"
+           "        -f --fill                                               Устанавливает нужна ли заливка.\n"
+           "        -F --fill_color <rrr.ggg.bbb>                           Устанавливает цвета заливки.\n\n"
+           "        -o --output <file.bmp>                                  Устанавливает название выходного файла.\n"
+           "        -i --input <file.bmp>                                   Устанавливает название входного файла.\n");
+}
+
 
 /**
  * @brief Данная функция проверяет корректность аргументов, проверяет что строку полностью состоит из чисел
  * @param str строка, которую нужно проверить
  * @return Если есть что то, кроме чисел, то возвращает ноль, иначе единицу.
  */
-bool isnumber(const char *str) {
+bool is_number(const char *str) {
     if (!str || *str == '\0') return 0;
 
     while (*str) {
@@ -141,6 +186,11 @@ bool is_correct_count_args(int argc, char** argv, char* name) {
         return 1;
     }
 
+    if (optarg[0] == '-') {
+        fprintf(stderr, "Error: вы не ввели аргументы для функции %s!\n", name);
+        return 1;
+    }
+
     if ( optind < argc && argv[optind][0] != '-' && !(isalpha(argv[optind][0]) && optind  + 1 == argc)) {
         fprintf(stderr, "Ошибка: вы ввели слишком много аргументов для %s\n", name);
         return 1;
@@ -158,12 +208,12 @@ bool is_correct_count_args(int argc, char** argv, char* name) {
  */
 bool is_correct_coords(int x, int y, int count) {
     if (count != 2) {
-        fprintf(stderr, "Error: Неккоректные координаты! Их должно быть двое!\n");
+        fprintf(stderr, "Error: Неккоректные координаты! Их должно быть два числовых значения!\n");
         return 1;
     }
 
 
-    if (x <= 0 || y <= 0) {
+    if (x < 0 || y < 0) {
         fprintf(stderr, "Error: Неккоректные координаты! Должны быть больше нуля!\n");
         return 1;
     }
@@ -225,7 +275,7 @@ int parce_coords(int argc, char** argv, char* name) {
 
     // Вторая проверка, на количество точек, гарантирует, что передано правильно количество аргументов.
     if (is_correct_dots(optarg, 1)) {
-        fprintf(stderr, "Error: Координаты переданы в некоректном формате! Должно быть - x.y\n");
+        fprintf(stderr, "Error: Координаты переданы в некоректном формате!\n");
         return 1;
     }
 
@@ -290,7 +340,7 @@ int thickness(object_t* figure, int argc, char** argv) {
     int count_args = is_correct_count_args(argc, argv, "--thickness");
     if (count_args != 0) return count_args;
 
-    if (!isnumber(optarg)) {
+    if (!is_number(optarg)) {
         fprintf(stderr, "Ошибка: вы ввели  не число для --thickness\n");
         return -1;
     }
@@ -360,7 +410,7 @@ int fill_color(object_t* figure, int argc, char** argv) {
  * @return Ноль, если все хорошо, в ином случае единицу.
  */
 int input_name(object_t* figure, int argc, char** argv) {
-    int check_args = is_correct_count_args(argc, argv, "input_name");
+    int check_args = is_correct_count_args(argc, argv, "--input");
     if (check_args != 0) return check_args;
 
     figure->start_filename = optarg;
@@ -389,7 +439,7 @@ int output_name(object_t* figure, int argc, char** argv) {
  * @param argv Список аргументов.
  */
 void get_filename(object_t* figure, int argc, char** argv) {
-    if (figure->start_filename == NULL && argc - 2 > 0 && argv[argc - 2][0] != '-')
+    if (figure->start_filename == NULL && ((argc - 2 > 0 && argv[argc - 2][0] != '-') || (argv[argc - 2][0] == '-' && argc - 3 == 0) || (figure->fill && (strcmp(argv[argc - 2], "--fill") || (strcmp(argv[argc - 2], "-f"))))) )
         figure->start_filename = argv[argc - 1];
 }
 
@@ -404,7 +454,7 @@ int angle(object_t* figure, int argc, char** argv) {
     int count_args = is_correct_count_args(argc, argv, "--angle");
     if (count_args != 0) return count_args;
 
-    if (!isnumber(optarg)) {
+    if (!is_number(optarg)) {
         fprintf(stderr, "Ошибка: вы ввели  не число для --angle\n");
         return -1;
     }
@@ -457,7 +507,7 @@ int radius(object_t* figure, int argc, char** argv) {
     int result_coords = parce_coords(argc, argv, "--radius");
     if (result_coords != 0) return result_coords;
 
-    if (!isnumber(optarg)) {
+    if (!is_number(optarg)) {
         fprintf(stderr, "Ошибка: вы ввели  не число для --radius\n");
         return -1;
     }
@@ -489,7 +539,7 @@ int count(object_t* figure, int argc, char** argv) {
     if (result_args != 0) return result_args;
 
 
-    if (!isnumber(optarg)) {
+    if (!is_number(optarg)) {
         fprintf(stderr, "Ошибка: вы ввели  не число для --count\n");
         return -1;
     }
@@ -656,6 +706,10 @@ int parce_rectangle(int argc, char** argv, object_t* figure) {
                 break;
             }
             case 'f':
+                if (optind < argc && argv[optind][0] != '-' && !(isalpha(argv[optind][0]) && optind  + 1 == argc)) {
+                    fprintf(stderr, "Ошибка: --fill не принимает аргументы!\n");
+                    return -1;
+                }
                 figure->fill = true;
                 break;
             case 'F': {
@@ -679,7 +733,7 @@ int parce_rectangle(int argc, char** argv, object_t* figure) {
         }
     }
 
-    get_filename(figure, argc, argv);
+        get_filename(figure, argc, argv);
     return 0;
 }
 
@@ -884,6 +938,10 @@ bool check_dt_bmp(const char* filename) {
  * @return Ноль если все хорошо, в ином случае код ошибки.
  */
 int base_parser(object_t* figure, int argc, char** argv) {
+
+    if (argc == 1) {
+        return 1;
+    }
     static struct option long_options[] = {
         {"rect", no_argument, 0, 0},
         {"ornament", required_argument, 0, 0},
@@ -897,8 +955,10 @@ int base_parser(object_t* figure, int argc, char** argv) {
     int opt, option_index = 0;
     opt = getopt_long(argc, argv, "h", long_options, &option_index);
 
+
     if (opt == 'h') {
         print_help();
+        help_print();
         return 1;
     }
 
@@ -923,28 +983,32 @@ int base_parser(object_t* figure, int argc, char** argv) {
                 break;
             case info:
                 figure->mod = info;
-                if(optarg){
-                    figure->start_filename = optarg;
-                    res = 0;
+                if(!optarg){
+                    fprintf(stderr, "Error: не было передано название файла!\n");
+                    return 1;
                 }
-
-                fprintf(stderr, "Error: не было передано название файла!\n");
-                return 1;
+                figure->start_filename = optarg;
+                res = 0;
+                break;
 
             case help:
                 print_help();
+                help_print();
                 return 69;
 
             case '?':
                 fprintf(stderr, "Error: была переданна неизвестная коменда!\n");
                 return 1;
+            default:
+                printf("fdfd");
         }
         return res;
     }
 
+
+
     return 0;
 }
-
 
 /**
  * @brief Проверят на корректность заполненость цветов для определённого режима.
@@ -1163,6 +1227,8 @@ int base_checker(object_t* figure) {
         case circ:
             res_check = check_circle(figure);
             break;
+        case info:   // Избыточно, так как уже проверяется корректность имени файла.
+            break;
         default:
             fprintf(stderr, "Error: Невозможная ошибка!\n");
             return 1;
@@ -1179,6 +1245,7 @@ int main(int argc, char* argv[]){
     if (res != 0) return 41;
 
     int result_chek = base_checker(figure);
+    if (result_chek != 0) return 42;
 
     printf("mod %d\n", figure->mod);
     printf("pattern %d\n", figure->pattern);
@@ -1195,9 +1262,9 @@ int main(int argc, char* argv[]){
     printf("x_c, y_c %d  %d\n", figure->x_center, figure->y_center);
     printf("rad %d\n", figure->radius);
 
-    if (figure->start_filename != NULL) {
-        puts(figure->start_filename);
-    }
+
+    puts(figure->start_filename);
+
     puts(figure->finish_filename);
     free(figure);
 
