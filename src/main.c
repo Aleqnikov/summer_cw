@@ -85,6 +85,9 @@ void constuctor(object_t* obj) {
     obj->color_b = -1;
 }
 
+/**
+ * @brief Данная функция является справкой для команд, которые поддерживает приложение.
+ */
 void help_print(void) {
     printf("╭━━╮╭━╮╭━┳━━━╮╭━━━┳━━━┳━━┳━━━━┳━━━┳━━━╮\n"
             "┃╭╮┃┃┃╰╯┃┃╭━╮┃┃╭━━┻╮╭╮┣┫┣┫╭╮╭╮┃╭━╮┃╭━╮┃\n"
@@ -129,7 +132,6 @@ void help_print(void) {
            "        -o --output <file.bmp>                                  Устанавливает название выходного файла.\n"
            "        -i --input <file.bmp>                                   Устанавливает название входного файла.\n");
 }
-
 
 /**
  * @brief Данная функция проверяет корректность аргументов, проверяет что строку полностью состоит из чисел
@@ -560,108 +562,6 @@ int count(object_t* figure, int argc, char** argv) {
 }
 
 /**
- * @brief Данная функция является парсером для орнамента, режима rect, semicircles.
- * @param figure Указатель на объект.
- * @param argc Количество аргументов.
- * @param argv Список аргументов.
- * @return Ноль если все хорошо, в ином случае код ошибки.
- */
-int ornament_rect_semicrcls(object_t* figure, int argc, char** argv) {
-    static struct option long_options[] = {
-        {"thickness", required_argument, 0, 't'},
-        {"color", required_argument, 0, 'C'},
-        {"count", required_argument, 0, 'c'},
-        {"input", required_argument, 0, 'i'},
-        {"output", required_argument, 0, 'o'},
-        {0, 0, 0, 0}
-    };
-
-    int opt, option_index = 0;
-
-    while ((opt = getopt_long(argc, argv, "t:C:c:i:o:", long_options, &option_index)) != -1) {
-        switch (opt) {
-            case 't': {
-                int result_t = thickness(figure, argc, argv);
-                if (result_t != 0) return result_t;
-                break;
-            }
-            case 'C': {
-                int result_C = color(figure, argc, argv);
-                if (result_C != 0) return result_C;
-                break;
-            }
-            case 'c': {
-                int result_c = count(figure, argc, argv);
-                if (result_c != 0) return result_c;
-                break;
-            }
-            case 'i': {
-                int res_i = input_name(figure, argc, argv);
-                if (res_i != 0) return res_i;
-                break;
-            }
-            case 'o': {
-                int res_o = output_name(figure, argc, argv);
-                if (res_o != 0) return res_o;
-                break;
-            }
-            case '?':
-                fprintf(stderr, "Error: Некорректный аргумент.\n");
-                return -1;
-        }
-    }
-
-    get_filename(figure, argc, argv);
-
-    return 0;
-}
-
-/**
- * @brief Данная функция является парсером для орнамента, режима circle.
- * @param figure Указатель на объект.
- * @param argc Количество аргументов.
- * @param argv Список аргументов.
- * @return Ноль если все хорошо, в ином случае код ошибки.
- */
-int ornament_circle(object_t* figure, int argc, char** argv) {
-    static struct option long_options[] = {
-        {"color", required_argument, 0, 'C'},
-        {"input", required_argument, 0, 'i'},
-        {"output", required_argument, 0, 'o'},
-        {0, 0, 0, 0}
-    };
-
-    int opt, option_index = 0;
-
-    while ((opt = getopt_long(argc, argv, "C:i:o:", long_options, &option_index)) != -1) {
-        switch (opt) {
-            case 'C': {
-                int result_C = color(figure, argc, argv);
-                if (result_C != 0) return result_C;
-                break;
-            }
-            case 'i': {
-                int res_i = input_name(figure, argc, argv);
-                if (res_i != 0) return res_i;
-                break;
-            }
-            case 'o': {
-                int res_o = output_name(figure, argc, argv);
-                if (res_o != 0) return res_o;
-                break;
-            }
-            case '?':
-                fprintf(stderr, "Ошибка: некорректный аргумент.\n");
-            return -1;
-        }
-    }
-
-    get_filename(figure, argc, argv);
-
-    return 0;
-}
-
-/**
  * @brief Данная функция является парсером --rect.
  * @param figure Указатель на объект.
  * @param argc Количество аргументов.
@@ -678,6 +578,7 @@ int parce_rectangle(int argc, char** argv, object_t* figure) {
         {"fill_color", required_argument, 0, 'F'},
         {"input", required_argument, 0, 'i'},
         {"output", required_argument, 0, 'o'},
+
         {0, 0, 0, 0}
     };
 
@@ -877,39 +778,67 @@ int parce_circle(int argc, char** argv, object_t* figure) {
  * @return Ноль если все хорошо, в ином случае код ошибки.
  */
 int parce_ornament(int argc, char** argv, object_t* figure) {
-    int count_args = is_correct_count_args(argc, argv, "--ornament");
-    if (count_args != 0) return count_args;
+    static struct option long_options[] = {
+        {"pattern", required_argument, 0, 'p'},
+        {"count", required_argument, 0, 'c'},
+        {"thickness", required_argument, 0, 't'},
+        {"color", required_argument, 0, 'C'},
+        {"input", required_argument, 0, 'i'},
+        {"output", required_argument, 0, 'o'},
+        {0, 0, 0, 0}
+    };
 
-    int is_word = -1;
+    int opt, option_index = 0;
 
-    if (strcmp(optarg, "rectangle") == 0) is_word = 0;
-    if (strcmp(optarg, "circle") == 0) is_word = 1;
-    if (strcmp(optarg, "semicircles") == 0) is_word = 2;
+    while ((opt = getopt_long(argc, argv, "p:c:t:C:i:o:", long_options, &option_index)) != -1) {
+        switch (opt) {
+            case 'p': {
+                int count_args = is_correct_count_args(argc, argv, "--pattern");
+                if (count_args != 0) return count_args;
 
-    switch (is_word) {
-        case rectangle: {
-            figure->pattern = rectangle;
-            int res_r = ornament_rect_semicrcls(figure, argc, argv);
-            if (res_r != 0) return res_r;
-            break;
+                if (!strcmp(optarg, "rectangle")) figure->pattern = rectangle;
+                if (!strcmp(optarg, "semicircle")) figure->pattern = semicircle;
+                if (!strcmp(optarg, "circle")) figure->pattern = circle;
+
+                if (figure->pattern == none) {
+                    fprintf(stderr, "Error: Вы не выбрали режим орнамента!\n");
+                    return 1;
+                }
+                break;
+
+            }
+            case 'c': {
+                int result_c = count(figure, argc, argv);
+                if (result_c != 0) return result_c;
+                break;
+            }
+            case 't': {
+                int result_t = thickness(figure, argc, argv);
+                if (result_t != 0) return result_t;
+                break;
+            }
+            case 'C': {
+                int result_C = color(figure, argc, argv);
+                if (result_C != 0) return result_C;
+                break;
+            }
+            case 'i': {
+                int res_i = input_name(figure, argc, argv);
+                if (res_i != 0) return res_i;
+                break;
+            }
+            case 'o': {
+                int res_o = output_name(figure, argc, argv);
+                if (res_o != 0) return res_o;
+                break;
+            }
+            case '?':
+                fprintf(stderr, "Ошибка: некорректный аргумент.\n");
+                return -1;
         }
-        case circle: {
-            figure->pattern = circle;
-            int res_c = ornament_circle(figure, argc, argv);
-            if (res_c != 0) return res_c;
-            break;
-        }
-        case semicircle: {
-            figure->pattern = semicircle;
-            int res_s = ornament_rect_semicrcls(figure, argc, argv);
-            if (res_s != 0) return res_s;
-            break;
-        }
-        default:
-            fprintf(stderr, "Ошибка: вы выбрали неправильный режим орнамента!\n");
-        return 1;
     }
 
+    get_filename(figure, argc, argv);
     return 0;
 }
 
@@ -928,7 +857,6 @@ bool check_dt_bmp(const char* filename) {
     return !(len >= 4 && strcmp(filename + len - 4, ".bmp") == 0);
 }
 
-
 /**
  * @brief Данная функция является логической функции парсера, которая проверяет все команды
  * и передаёт их в зависимые функции.
@@ -939,12 +867,12 @@ bool check_dt_bmp(const char* filename) {
  */
 int base_parser(object_t* figure, int argc, char** argv) {
 
-    if (argc == 1) {
+    if (argc == 1)    // Проверка на то, что если не передано аргументов, про программа ничего не делает.
         return 1;
-    }
+
     static struct option long_options[] = {
         {"rect", no_argument, 0, 0},
-        {"ornament", required_argument, 0, 0},
+        {"ornament", no_argument, 0, 0},
         {"rotate", no_argument, 0, 0},
         {"circle", no_argument, 0, 0},
         {"info", required_argument, 0, 0},
@@ -955,9 +883,12 @@ int base_parser(object_t* figure, int argc, char** argv) {
     int opt, option_index = 0;
     opt = getopt_long(argc, argv, "h", long_options, &option_index);
 
-
     if (opt == 'h') {
-        print_help();
+        if (argc != 2) {            // Проверяем, что количество аргументов равно единице.
+            fprintf(stderr, "Error: Передано слишком много аргументов.\n");
+            return 1;
+        }
+
         help_print();
         return 1;
     }
@@ -966,10 +897,12 @@ int base_parser(object_t* figure, int argc, char** argv) {
         int res = 0;
         switch (option_index) {
             case rect:
+
                 figure->mod = rect;
                 res = parce_rectangle(argc, argv, figure);
                 break;
             case ornament:
+
                 figure->mod = ornament;
                 res = parce_ornament(argc, argv, figure);
                 break;
@@ -983,15 +916,27 @@ int base_parser(object_t* figure, int argc, char** argv) {
                 break;
             case info:
                 figure->mod = info;
+
+                if (argc != 3) {        // В данном случае, проверяем, что передано всего два аргумента.
+                    fprintf(stderr, "Error: Передано слишком много аргументов.\n");
+                    return 1;
+                }
+
                 if(!optarg){
                     fprintf(stderr, "Error: не было передано название файла!\n");
                     return 1;
                 }
+
                 figure->start_filename = optarg;
                 res = 0;
                 break;
 
             case help:
+
+                if (argc != 2) {            // Проверяем, что количество аргументов равно единице.
+                    fprintf(stderr, "Error: Передано слишком много аргументов.\n");
+                    return 69;
+                }
                 print_help();
                 help_print();
                 return 69;
@@ -999,13 +944,9 @@ int base_parser(object_t* figure, int argc, char** argv) {
             case '?':
                 fprintf(stderr, "Error: была переданна неизвестная коменда!\n");
                 return 1;
-            default:
-                printf("fdfd");
         }
         return res;
     }
-
-
 
     return 0;
 }
@@ -1149,7 +1090,17 @@ int check_ornament(object_t* figure) {
             }
 
             break;
-        case circle: // У него только цвет
+        case circle:
+            if (figure->thinckness != -1) {
+                fprintf(stderr, "Error: Вы выбрали режим орнамента круг, но добавили лишний аргумент --thinckness!\n");
+                return 1;
+            }
+
+            if (figure->count != -1) {
+                fprintf(stderr, "Error: Вы выбрали режим орнамента круг, но добавили лишний аргумент --count!\n");
+                return 1;
+            }
+
             break;
         case semicircle:
             if (checker_color(figure)) return 1;
@@ -1159,6 +1110,9 @@ int check_ornament(object_t* figure) {
                 return 1;
             }
             break;
+        case none:
+            fprintf(stderr, "Error: не был введён орнамента режим!\n");
+            return 1;
         default:
             fprintf(stderr, "Error: Невозможная ошибка в проверка орнамента.\n");
             return 1
