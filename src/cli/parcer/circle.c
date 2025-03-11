@@ -12,7 +12,7 @@
  * @param argv Список аргументов.
  * @return Ноль если все хорошо, в ином случае код ошибки.
  */
-int parce_circle(int argc, char** argv, object_t* figure) {
+bool parce_circle(int argc, char** argv, object_t* figure) {
     static struct option long_options[] = {
         {"center", required_argument, 0, 'c'},
         {"radius", required_argument, 0, 'r'},
@@ -29,51 +29,51 @@ int parce_circle(int argc, char** argv, object_t* figure) {
 
     while ((opt = getopt_long(argc, argv, "t:c:r:C:fF:i:o:", long_options, &option_index)) != -1) {
         switch (opt) {
-            case 'c': {
-                int result_c = circle_get(figure, argc, argv);
-                if (result_c != 0) return result_c;
+            case 'c':
+                if (circle_get(figure, argc, argv) != 0)
+                    return 1;
                 break;
-            }
-            case 'r': {
-                int result_rad = radius(figure, argc, argv);
-                if (result_rad != 0) return result_rad;
+
+            case 'r':
+                if (radius(figure, argc, argv) != 0)
+                    return 1;
                 break;
-            }
-            case 't': {
-                int result_t = thickness(figure, argc, argv);
-                if (result_t != 0) return result_t;
+
+            case 't':
+                if (thickness(figure, argc, argv) != 0)
+                    return 1;
                 break;
-            }
-            case 'C': {
-                int result_C = color(figure, argc, argv);
-                if (result_C != 0) return result_C;
+
+            case 'C':
+                if (color(figure, argc, argv) != 0)
+                    return 1;
                 break;
-            }
+
             case 'f':
                 if (optind < argc && argv[optind][0] != '-') {
-                    fprintf(stderr, "Ошибка: --fill не принимает аргументы!\n");
-                    return -1;
+                    fprintf(stderr, "Error: --fill не принимает аргументы!\n");
+                    return 1;
                 }
                 figure->fill = true;
                 break;
-            case 'F': {
-                int result_f_c = fill_color(figure, argc, argv);
-                if (result_f_c != 0) return result_f_c;
+            case 'F':
+                if (fill_color(figure, argc, argv) != 0)
+                    return 1;
                 break;
-            }
-            case 'i': {
-                int res_i = input_name(figure, argc, argv);
-                if (res_i != 0) return res_i;
+
+            case 'i':
+                if (input_name(figure, argc, argv) != 0)
+                    return 1;
                 break;
-            }
+
             case 'o': {
-                int res_o = output_name(figure, argc, argv);
-                if (res_o != 0) return res_o;
+                if (output_name(figure, argc, argv) != 0)
+                    return 1;
                 break;
             }
             case '?':
-                fprintf(stderr, "Ошибка: некорректный аргумент.\n");
-                return -1;
+                fprintf(stderr, "Error: некорректный аргумент.\n");
+                return 1;
         }
     }
 

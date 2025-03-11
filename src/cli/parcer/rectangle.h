@@ -3,6 +3,6 @@
 
 #include "parcer.h"
 
-int parce_rectangle(int , char** , object_t* );
+bool parce_rectangle(int , char** , object_t* );
 
 #endif // RECTANGLE_H

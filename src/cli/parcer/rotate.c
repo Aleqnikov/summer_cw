@@ -5,6 +5,7 @@
 
 #include "rotate.h"
 
+
 /**
  * @brief Данная функция является парсером для --rect.
  * @param figure Указатель на объект.
@@ -12,7 +13,7 @@
  * @param argv Список аргументов.
  * @return Ноль если все хорошо, в ином случае код ошибки.
  */
-int parce_rotate(int argc, char** argv, object_t* figure) {
+bool parce_rotate(int argc, char** argv, object_t* figure) {
     static struct option long_options[] = {
         {"left_up", required_argument, 0, 'l'},
         {"right_down", required_argument, 0, 'r'},
@@ -26,34 +27,34 @@ int parce_rotate(int argc, char** argv, object_t* figure) {
 
     while ((opt = getopt_long(argc, argv, "l:r:a:i:o:", long_options, &option_index)) != -1) {
         switch (opt) {
-            case 'l': {
-                int result_l = left_up(figure, argc, argv);
-                if (result_l != 0) return result_l;
+            case 'l':
+                if (left_up(figure, argc, argv) != 0)
+                    return 1;
                 break;
-            }
-            case 'r': {
-                int result_r = right_down(figure, argc, argv);
-                if (result_r != 0) return result_r;
+
+            case 'r':
+                if (right_down(figure, argc, argv) != 0)
+                    return 1;
                 break;
-            }
-            case 'a': {
-                int result_a = angle(figure, argc, argv);
-                if (result_a != 0) return result_a;
+
+            case 'a':
+                if (angle(figure, argc, argv) != 0)
+                    return 1;
                 break;
-            }
-            case 'i': {
-                int res_i = input_name(figure, argc, argv);
-                if (res_i != 0) return res_i;
+
+            case 'i':
+                if (input_name(figure, argc, argv) != 0)
+                    return 1;
                 break;
-            }
-            case 'o': {
-                int res_o = output_name(figure, argc, argv);
-                if (res_o != 0) return res_o;
+
+            case 'o':
+                if (output_name(figure, argc, argv) != 0)
+                    return 1;
                 break;
-            }
+
             case '?':
-                fprintf(stderr, "Ошибка: некорректный аргумент.\n");
-            return -1;
+                fprintf(stderr, "Error: некорректный аргумент.\n");
+                return 1;
         }
     }
 

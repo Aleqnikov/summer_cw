@@ -3,6 +3,6 @@
 
 #include "parcer.h"
 
-int parce_circle(int, char** , object_t* );
+bool parce_circle(int, char** , object_t* );
 
 #endif // CIRCLE_H

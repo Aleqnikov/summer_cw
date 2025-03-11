@@ -47,7 +47,7 @@ bool checker_thinckness(object_t* figure) {
  * @return Правду либо ложь.
  */
 bool checker_left_up(object_t* figure) {
-    if (figure->x_left_up == -1 || figure->y_left_up == -1) {
+    if (figure->x_left_up == INT_MIN || figure->y_left_up == INT_MIN) {
         fprintf(stderr, "Error: Вы не ввели координаты для левой верхней точки!\n");
         return 1;
     }
@@ -60,7 +60,7 @@ bool checker_left_up(object_t* figure) {
  * @return Правду либо ложь.
  */
 bool checker_right_down(object_t* figure) {
-    if (figure->x_right_down == -1 || figure->y_right_down == -1) {
+    if (figure->x_right_down == INT_MIN || figure->y_right_down == INT_MIN) {
         fprintf(stderr, "Error: Вы не ввели координаты для правой нижней точки!\n");
         return 1;
     }

@@ -11,7 +11,7 @@
  * @param figure Указатель на структуру.
  * @return Ноль или единица
  */
-int check_rectangle(object_t* figure) {
+bool check_rectangle(object_t* figure) {
     if (checker_left_up(figure)) return 1;
 
     if (checker_right_down(figure)) return 1;
@@ -30,9 +30,9 @@ int check_rectangle(object_t* figure) {
  * @param figure Указатель на структуру.
  * @return Ноль или единица
  */
-int check_circle(object_t* figure) {
+bool check_circle(object_t* figure) {
     // Проверяем специфические параметры
-    if (figure->x_center == -1 || figure->y_center == -1) {
+    if (figure->x_center == INT_MIN || figure->y_center == INT_MIN) {
         fprintf(stderr, "Error: Вы не выбрали центр окружности!\n");
         return 1;
     }
@@ -56,7 +56,7 @@ int check_circle(object_t* figure) {
  * @param figure Указатель на объект.
  * @return Ноль в случае удачи в ином случае единица.
  */
-int check_ornament(object_t* figure) {
+bool check_ornament(object_t* figure) {
 
     if (figure->color_r == -1 || figure->color_g == -1 || figure->color_b == -1) {
         fprintf(stderr, "Error: Вы не ввели цвет для фигуры!\n");
@@ -74,7 +74,17 @@ int check_ornament(object_t* figure) {
             }
 
             break;
-        case circle: // У него только цвет
+        case circle:
+            if (figure->thinckness != -1) {
+                fprintf(stderr, "Error: Вы выбрали режим орнамента круг, но добавили лишний аргумент --thinckness!\n");
+                return 1;
+            }
+
+            if (figure->count != -1) {
+                fprintf(stderr, "Error: Вы выбрали режим орнамента круг, но добавили лишний аргумент --count!\n");
+                return 1;
+            }
+
             break;
         case semicircle:
             if (checker_color(figure)) return 1;
@@ -84,6 +94,9 @@ int check_ornament(object_t* figure) {
                 return 1;
             }
             break;
+        case none:
+            fprintf(stderr, "Error: не был введён орнамента режим!\n");
+            return 1;
         default:
             fprintf(stderr, "Error: Невозможная ошибка в проверка орнамента.\n");
             return 1
@@ -93,12 +106,13 @@ int check_ornament(object_t* figure) {
     return 0;
 }
 
+
 /**
  * @brief Проверят корректность полей для ornament.
  * @param figure Указатель на объект.
  * @return Ноль в случае удачи в ином случае единица.
  */
-int check_rotate(object_t* figure) {
+bool check_rotate(object_t* figure) {
     if (checker_left_up(figure)) return 1;
 
     if (checker_right_down(figure)) return 1;

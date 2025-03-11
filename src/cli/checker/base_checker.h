@@ -5,6 +5,6 @@
 
 #include "check_functions.h"
 
-int base_checker(object_t*);
+bool base_checker(object_t*);
 
 #endif // BASE_CHECKER_H

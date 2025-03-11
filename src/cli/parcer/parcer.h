@@ -8,8 +8,9 @@
 #include "ornament.h"
 #include "rotate.h"
 #include "additional.h"
+#include "help.h"
 
 
-int base_parser(object_t*, int, char** );
+bool base_parser(object_t*, int, char** );
 
 #endif // PARCER_H

@@ -46,6 +46,25 @@ bool is_correct_dots(const char *str, int count_dots) {
     return !(dot == NULL);
 }
 
+
+/**
+ * @brief Данная функция проверят, передал ли пользователь лишний аргумент, после флага, не требующего аргументы.
+ *
+ *  Функция проверят, что аргументов больше двух ( в противном случае доп аргумента попросту и нету)
+ *  затем она проверят, что следующий аргумент не флаг, в случае неудачи возвращает ложь.
+ *
+ * @param argc Количество аргументов.
+ * @param argv Список аргументов.
+ * @return Булевое значение.
+ */
+bool no_arguments(int argc, char** argv, char* flag_name) {
+    if (argc > 2 && argv[2][0] != '-') {
+        fprintf(stderr, "Error:  %s не принимает аргументов!\n", flag_name);
+        return 1;
+    }
+    return 0;
+}
+
 /**
  * @brief Данная функция проверят есть ли лишний аргумент после функции.
  * @param argc Количество аргументов.
@@ -54,14 +73,18 @@ bool is_correct_dots(const char *str, int count_dots) {
  * @return Единицу, если слишком много аргументов, ноль, если все в норме.
  */
 bool is_correct_count_args(int argc, char** argv, char* name) {
-
     if (!optarg) {
         fprintf(stderr, "Error: Не был передан аргумент для %s!\n", name);
         return 1;
     }
 
+    if (optarg[0] == '-' && !isdigit(optarg[1])) {
+        fprintf(stderr, "Error: вы не ввели аргументы для функции %s!\n", name);
+        return 1;
+    }
+
     if ( optind < argc && argv[optind][0] != '-' && !(isalpha(argv[optind][0]) && optind  + 1 == argc)) {
-        fprintf(stderr, "Ошибка: вы ввели слишком много аргументов для %s\n", name);
+        fprintf(stderr, "Error: вы ввели слишком много аргументов для %s\n", name);
         return 1;
     }
 
@@ -69,21 +92,26 @@ bool is_correct_count_args(int argc, char** argv, char* name) {
 }
 
 /**
- * @brief Проверяет координаты на корректность, в данном случае количество, и нахождение в первой четверти.
- * @param x Координата по x.
- * @param y Координаты по y.
- * @param count Количество считанных координат.
- * @return Булевое значение.
+ * @brief Функция сравнения считанных аргументов, и ожидаемого количества.
+ *
+ * Данная функция проверяет, совпадает ли количество аргументов,
+ * переданных в программу, с ожидаемым количеством. Если количество
+ * считанных аргументов не соответствует ожидаемому, функция
+ * выводит сообщение об ошибке в стандартный поток ошибок
+ * и возвращает значение 1 (истина). В противном случае
+ * возвращает 0 (ложь).
+ *
+ * @param read_count Общее количество аргументов, которые были прочитаны.
+ * @param correct_count Ожидаемое количество аргументов.
+ * @param name_mode Имя режима работы программы, используемое для
+ * вывода в сообщение об ошибке.
+ *
+ * @return true (1), если количество аргументов не совпадает,
+ * иначе false (0).
  */
-bool is_correct_coords(int x, int y, int count) {
-    if (count != 2) {
-        fprintf(stderr, "Error: Неккоректные координаты! Их должно быть двое!\n");
-        return 1;
-    }
-
-
-    if (x <= 0 || y <= 0) {
-        fprintf(stderr, "Error: Неккоректные координаты! Должны быть больше нуля!\n");
+bool comp_cnt_args(int read_count, int correct_count, char* name_mode) {
+    if (read_count != correct_count) {
+        fprintf(stderr, "Error: Некорректно переданы аргументы для  %s\n", name_mode);
         return 1;
     }
     return 0;
@@ -96,13 +124,13 @@ bool is_correct_coords(int x, int y, int count) {
  * @param name Название флага.
  * @return Если все правильно, то 0, иначе код ошибки.
  */
-int check_color(int argc, char** argv, char* name) {
+bool check_color(int argc, char** argv, char* name) {
     int count_args = is_correct_count_args(argc, argv, name);
     if (count_args != 0) return count_args;
 
     if (is_correct_dots(optarg, 2)) {
         fprintf(stderr, "Error: Цвета переданы в некорректном формате! Должно быть - r.g.b\n");
-        return -1;
+        return 1;
     }
 
     return 0;
@@ -116,11 +144,9 @@ int check_color(int argc, char** argv, char* name) {
  * @param blue Число синего цвета.
  * @return
  */
-int check_colors(int count, int red, int green, int blue) {
-    if (count != 3) {
-        fprintf(stderr, "Error: передано слишком мало аргументов для цвета.\n");
+bool check_colors(int count_read, int red, int green, int blue) {
+    if (comp_cnt_args(count_read, three_read, ""))
         return 1;
-    }
 
     if (red < 0 || red > 255 || blue < 0 || blue > 255 || green < 0 || green > 255) {
         fprintf(stderr, "Error: цвета переданы в неккоректном формате! Каждый должен быть в диапазоне [0, 255]");
@@ -130,6 +156,7 @@ int check_colors(int count, int red, int green, int blue) {
     return 0;
 }
 
+
 /**
  *@brief Данная функция проверят в правильном ли формате переданы координаты точки.
  * @param argc Количество аргументов.
@@ -137,14 +164,14 @@ int check_colors(int count, int red, int green, int blue) {
  * @param name Имя проверяемого флага.
  * @return Ноль, если все в порядке, единицу в противном случае.
  */
-int parce_coords(int argc, char** argv, char* name) {
+bool parce_coords(int argc, char** argv, char* name) {
     // Проверка на корректность количества аргументов.
     int count_args = is_correct_count_args(argc, argv, name);
     if (count_args != 0) return count_args;
 
     // Вторая проверка, на количество точек, гарантирует, что передано правильно количество аргументов.
     if (is_correct_dots(optarg, 1)) {
-        fprintf(stderr, "Error: Координаты переданы в некоректном формате! Должно быть - x.y\n");
+        fprintf(stderr, "Error: Координаты переданы в некоректном формате!\n");
         return 1;
     }
 
@@ -158,16 +185,15 @@ int parce_coords(int argc, char** argv, char* name) {
  * @param argv Список аргументов.
  * @return Возвращает ноль, если все в порядке, в ином случае либо код ошибки, либо единицу.
  */
-int left_up(object_t* figure, int argc, char** argv) {
-
+bool left_up(object_t* figure, int argc, char** argv) {
     int result_coords = parce_coords(argc, argv, "left_up");
     if (result_coords != 0)
         return result_coords;
 
     int x, y;
-    int res = sscanf(optarg, "%d.%d", &x, &y);
+    int count_read = sscanf(optarg, "%d.%d", &x, &y);
 
-    if (is_correct_coords(x, y, res))
+    if (comp_cnt_args(count_read, two_read, "--left_up"))
         return 1;
 
     figure->x_left_up = x; figure->y_left_up = y;
@@ -182,15 +208,15 @@ int left_up(object_t* figure, int argc, char** argv) {
  * @param argv Список аргументов.
  * @return Возвращает ноль, если все в порядке, в ином случае либо код ошибки, либо единицу.
  */
-int right_down(object_t* figure, int argc, char** argv) {
-
+bool right_down(object_t* figure, int argc, char** argv) {
     int result_coords = parce_coords(argc, argv, "right_down");
     if (result_coords != 0)
         return result_coords;
-    int x, y;
-    int res = sscanf(optarg, "%d.%d", &x, &y);
 
-    if (is_correct_coords(x, y, res))
+    int x, y;
+    int count_read = sscanf(optarg, "%d.%d", &x, &y);
+
+    if (comp_cnt_args(count_read, two_read, "--right_down"))
         return 1;
 
     figure->x_right_down = x; figure->y_right_down = y;
@@ -202,28 +228,25 @@ int right_down(object_t* figure, int argc, char** argv) {
  * @param figure Указатель на объект данных.
  * @param argc Количество аргументов.
  * @param argv Список аргументов.
- * @return Ноль, если все в порядке, в ином случает -1 если возникла ошибка, или иной код ошибки.
+ * @return Ноль, если все в порядке, в ином случает 1.
  */
-int thickness(object_t* figure, int argc, char** argv) {
-
+bool thickness(object_t* figure, int argc, char** argv) {
     int count_args = is_correct_count_args(argc, argv, "--thickness");
     if (count_args != 0) return count_args;
 
     if (!is_number(optarg)) {
-        fprintf(stderr, "Ошибка: вы ввели  не число для --thickness\n");
-        return -1;
+        fprintf(stderr, "Error: вы ввели  не число для --thickness\n");
+        return 1;
     }
 
-    int res = sscanf(optarg, "%d", &figure->thinckness);
+    int count_read = sscanf(optarg, "%d", &figure->thinckness);
 
-    if (res != 1) {
-        fprintf(stderr, "Ошибка: вы аргументы неправильные для --thickness\n");
-        return -1;
-    }
+    if (comp_cnt_args(count_read, one_read, "--thickness"))
+        return 1;
 
     if (figure->thinckness <= 0) {
-        fprintf(stderr, "Ошибка: вы аргументы неправильные для, должны быть больше нуля! --thickness\n");
-        return -1;
+        fprintf(stderr, "Error: Неккоректный аргумент для --thickness, должно быть больше нуля!\n");
+        return 1;
     }
 
     return 0;
@@ -236,15 +259,15 @@ int thickness(object_t* figure, int argc, char** argv) {
  * @param argv Список аргументов.
  * @return Если все в порядке, то ноль, в ином случае код ошибки.
  */
-int color(object_t* figure, int argc, char** argv) {
+bool color(object_t* figure, int argc, char** argv) {
     int first_check = check_color(argc, argv, "--color");
     if (first_check != 0) return first_check;
 
     int red, green, blue;
-    int res = sscanf(optarg, "%d.%d.%d", &red, &green, &blue);
+    int count_read = sscanf(optarg, "%d.%d.%d", &red, &green, &blue);
 
-    int second_check = check_colors(res, red, green, blue);
-    if (second_check != 0) return second_check;
+    if (check_colors(count_read, red, green, blue))
+        return 1;
 
     figure->color_r = red; figure->color_g = green; figure->color_b = blue;
     return 0;
@@ -257,15 +280,15 @@ int color(object_t* figure, int argc, char** argv) {
  * @param argv Список аргументов.
  * @return Если все в порядке, то ноль, в ином случае код ошибки.
  */
-int fill_color(object_t* figure, int argc, char** argv) {
+bool fill_color(object_t* figure, int argc, char** argv) {
     int first_check = check_color(argc, argv, "--fill_color");
     if (first_check != 0) return first_check;
 
     int red, green, blue;
-    int res = sscanf(optarg, "%d.%d.%d", &red, &green, &blue);
+    int count_read = sscanf(optarg, "%d.%d.%d", &red, &green, &blue);
 
-    int second_check = check_colors(res, red, green, blue);
-    if (second_check != 0) return second_check;
+    if (check_colors(count_read, red, green, blue))
+        return 1;
 
     figure->color_fill_r = red; figure->color_fill_g = green; figure->color_fill_b = blue;
     return 0;
@@ -278,8 +301,8 @@ int fill_color(object_t* figure, int argc, char** argv) {
  * @param argv Список аргументов.
  * @return Ноль, если все хорошо, в ином случае единицу.
  */
-int input_name(object_t* figure, int argc, char** argv) {
-    int check_args = is_correct_count_args(argc, argv, "input_name");
+bool input_name(object_t* figure, int argc, char** argv) {
+    int check_args = is_correct_count_args(argc, argv, "--input");
     if (check_args != 0) return check_args;
 
     figure->start_filename = optarg;
@@ -293,7 +316,7 @@ int input_name(object_t* figure, int argc, char** argv) {
  * @param argv Список аргументов.
  * @return Если все нормально ноль, в ином случае код ошибки.
  */
-int output_name(object_t* figure, int argc, char** argv) {
+bool output_name(object_t* figure, int argc, char** argv) {
     int check_args = is_correct_count_args(argc, argv, "output_name");
     if (check_args != 0) return check_args;
 
@@ -308,8 +331,21 @@ int output_name(object_t* figure, int argc, char** argv) {
  * @param argv Список аргументов.
  */
 void get_filename(object_t* figure, int argc, char** argv) {
-    if (figure->start_filename == NULL && argc - 2 > 0 && argv[argc - 2][0] != '-')
+    if (figure->start_filename != NULL)
+        return;
+
+    bool has_enough_args = (argc - 2 > 0);
+    bool previous_is_not_flag = (argv[argc - 2][0] == '-' && isdigit(argv[argc - 2][1])) || argv[argc - 2][0] != '-' ;
+    bool only_fill_flag_present = (argv[argc - 2][0] == '-' && argc - 3 == 0);
+    bool is_fill_flag = figure->fill &&
+                        (strcmp(argv[argc - 2], "--fill") == 0 ||
+                         strcmp(argv[argc - 2], "-f") == 0);
+
+    if ((has_enough_args && previous_is_not_flag) ||
+        only_fill_flag_present ||
+        is_fill_flag) {
         figure->start_filename = argv[argc - 1];
+        }
 }
 
 /**
@@ -319,25 +355,23 @@ void get_filename(object_t* figure, int argc, char** argv) {
  * @param argv Список аргументов.
  * @return Ноль в случае удачи, код ошибки в ином случае.
  */
-int angle(object_t* figure, int argc, char** argv) {
-    int count_args = is_correct_count_args(argc, argv, "--angle");
-    if (count_args != 0) return count_args;
+bool angle(object_t* figure, int argc, char** argv) {
+    if (is_correct_count_args(argc, argv, "--angle"))
+        return 1;
 
     if (!is_number(optarg)) {
-        fprintf(stderr, "Ошибка: вы ввели  не число для --angle\n");
-        return -1;
+        fprintf(stderr, "Error: вы ввели не число для --angle\n");
+        return 1;
     }
 
-    int res = sscanf(optarg, "%d", &figure->angle);
+    int count_read = sscanf(optarg, "%d", &figure->angle);
 
-    if (res != 1) {
-        fprintf(stderr, "Ошибка: вы аргументы неправильные для --angle\n");
-        return -1;
-    }
+    if (comp_cnt_args(count_read, one_read, "--angle"))
+        return 1;
 
     if (figure->angle != 90 && figure->angle != 180 && figure->angle != 270) {
-        fprintf(stderr, "Ошибка: вы аргументы неправильные для, должны быть 90 или 180 или 270 --angle\n");
-        return -1;
+        fprintf(stderr, "Error: Введёно неправильно значение для --angle должны быть 90 или 180 или 270.\n");
+        return 1;
     }
 
     return 0;
@@ -350,19 +384,18 @@ int angle(object_t* figure, int argc, char** argv) {
  * @param argv Список аргументов.
  * @return Ноль в случае успеха, в ином случае код ошибки.
  */
-int circle_get(object_t* figure, int argc, char** argv) {
-    int result_coords = parce_coords(argc, argv, "--circle");
-    if (result_coords != 0) return result_coords;
+bool circle_get(object_t* figure, int argc, char** argv) {
+    if (parce_coords(argc, argv, "--circle"))
+        return 1;
 
     int x, y;
-    int res = sscanf(optarg, "%d.%d", &x, &y);
+    int count_read = sscanf(optarg, "%d.%d", &x, &y);
 
-    if (is_correct_coords(x, y, res))
+    if (comp_cnt_args(count_read, two_read, "--center"))
         return 1;
 
     figure->x_center = x; figure->y_center = y;
     return 0;
-
 }
 
 /**
@@ -372,25 +405,23 @@ int circle_get(object_t* figure, int argc, char** argv) {
  * @param argv Список аргументов.
  * @return В случае успеха ноль, в ином случае код ошибки.
  */
-int radius(object_t* figure, int argc, char** argv) {
-    int result_coords = parce_coords(argc, argv, "--radius");
-    if (result_coords != 0) return result_coords;
+bool radius(object_t* figure, int argc, char** argv) {
+    if (parce_coords(argc, argv, "--radius"))
+        return 1;
 
     if (!is_number(optarg)) {
-        fprintf(stderr, "Ошибка: вы ввели  не число для --radius\n");
-        return -1;
+        fprintf(stderr, "Error: вы ввели  не число для --radius\n");
+        return 1;
     }
 
-    int res = sscanf(optarg, "%d", &figure->radius);
+    int count_read = sscanf(optarg, "%d", &figure->radius);
 
-    if (res != 1) {
-        fprintf(stderr, "Ошибка: вы аргументы неправильные для --radius\n");
-        return -1;
-    }
+    if (comp_cnt_args(count_read, one_read, "--radius"))
+        return 1;
 
     if (figure->radius <= 0) {
-        fprintf(stderr, "Ошибка: вы аргументы неправильные для, должны быть больше нуля! --radius\n");
-        return -1;
+        fprintf(stderr, "Ошибка: Радиус должен быть больше нуля! --radius\n");
+        return 1;
     }
 
     return 0;
@@ -403,26 +434,23 @@ int radius(object_t* figure, int argc, char** argv) {
  * @param argv Список аргументов.
  * @return В случае успеха ноль, в ином случае код ошибки.
  */
-int count(object_t* figure, int argc, char** argv) {
-    int result_args = is_correct_count_args(argc, argv, "--count");
-    if (result_args != 0) return result_args;
-
+bool count(object_t* figure, int argc, char** argv) {
+    if (is_correct_count_args(argc, argv, "--count"))
+        return 1;
 
     if (!is_number(optarg)) {
-        fprintf(stderr, "Ошибка: вы ввели  не число для --count\n");
-        return -1;
+        fprintf(stderr, "Error: аргумент для --count должен быть числом!\n");
+        return 1;
     }
 
-    int res = sscanf(optarg, "%d", &figure->count);
+    int count_read = sscanf(optarg, "%d", &figure->count);
 
-    if (res != 1) {
-        fprintf(stderr, "Ошибка: вы аргументы неправильные для --count\n");
-        return -1;
-    }
+    if (comp_cnt_args(count_read, one_read, "--count"))
+        return 1;
 
     if (figure->count <=0 ) {
-        fprintf(stderr, "Ошибка:  аргументы неправильные для --count\n");
-        return -1;
+        fprintf(stderr, "Error:  аргументы неправильные для --count\n");
+        return 1;
     }
 
     return 0;

@@ -3,6 +3,6 @@
 
 #include "parcer.h"
 
-int parce_rotate(int, char**, object_t*);
+bool parce_rotate(int, char**, object_t*);
 
 #endif // ROTATE_H

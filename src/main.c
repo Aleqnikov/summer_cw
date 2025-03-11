@@ -181,6 +181,24 @@ bool is_correct_dots(const char *str, int count_dots) {
 }
 
 /**
+ * @brief Данная функция проверят, передал ли пользователь лишний аргумент, после флага, не требующего аргументы.
+ *
+ *  Функция проверят, что аргументов больше двух ( в противном случае доп аргумента попросту и нету)
+ *  затем она проверят, что следующий аргумент не флаг, в случае неудачи возвращает ложь.
+ *
+ * @param argc Количество аргументов.
+ * @param argv Список аргументов.
+ * @return Булевое значение.
+ */
+bool no_arguments(int argc, char** argv, char* flag_name) {
+    if (argc > 2 && argv[2][0] != '-') {
+        fprintf(stderr, "Error:  %s не принимает аргументов!\n", flag_name);
+        return 1;
+    }
+    return 0;
+}
+
+/**
  * @brief Данная функция проверят есть ли лишний аргумент после функции.
  * @param argc Количество аргументов.
  * @param argv Массив указателей на аргументы.
@@ -359,7 +377,7 @@ bool thickness(object_t* figure, int argc, char** argv) {
         return 1;
 
     if (figure->thinckness <= 0) {
-        fprintf(stderr, "Ошибка: вы аргументы неправильные для, должны быть больше нуля! --thickness\n");
+        fprintf(stderr, "Error: Неккоректный аргумент для --thickness, должно быть больше нуля!\n");
         return 1;
     }
 
@@ -618,7 +636,7 @@ bool parce_rectangle(int argc, char** argv, object_t* figure) {
             }
             case 'f':
                 if (optind < argc && argv[optind][0] != '-' && !(isalpha(argv[optind][0]) && optind  + 1 == argc)) {
-                    fprintf(stderr, "Ошибка: --fill не принимает аргументы!\n");
+                    fprintf(stderr, "Error: --fill не принимает аргументы!\n");
                     return -1;
                 }
                 figure->fill = true;
@@ -639,7 +657,7 @@ bool parce_rectangle(int argc, char** argv, object_t* figure) {
                 break;
 
             case '?':
-                fprintf(stderr, "Ошибка: некорректный аргумент.\n");
+                fprintf(stderr, "Error: некорректный аргумент.\n");
                 return 1;
         }
     }
@@ -695,7 +713,7 @@ bool parce_rotate(int argc, char** argv, object_t* figure) {
                 break;
 
             case '?':
-                fprintf(stderr, "Ошибка: некорректный аргумент.\n");
+                fprintf(stderr, "Error: некорректный аргумент.\n");
                 return 1;
         }
     }
@@ -750,7 +768,7 @@ bool parce_circle(int argc, char** argv, object_t* figure) {
 
             case 'f':
                 if (optind < argc && argv[optind][0] != '-') {
-                    fprintf(stderr, "Ошибка: --fill не принимает аргументы!\n");
+                    fprintf(stderr, "Error: --fill не принимает аргументы!\n");
                     return 1;
                 }
                 figure->fill = true;
@@ -771,7 +789,7 @@ bool parce_circle(int argc, char** argv, object_t* figure) {
                 break;
             }
             case '?':
-                fprintf(stderr, "Ошибка: некорректный аргумент.\n");
+                fprintf(stderr, "Error: некорректный аргумент.\n");
                 return 1;
         }
     }
@@ -843,7 +861,7 @@ bool parce_ornament(int argc, char** argv, object_t* figure) {
                 break;
             }
             case '?':
-                fprintf(stderr, "Ошибка: некорректный аргумент.\n");
+                fprintf(stderr, "Error: некорректный аргумент.\n");
                 return 1;
         }
     }
@@ -908,23 +926,28 @@ bool base_parser(object_t* figure, int argc, char** argv) {
         switch (option_index) {
             case rect:
 
-                if (argc > 2 && argv[2][0] != '-') {
-                    fprintf(stderr, "Error:  --rect не принимает аргументов!\n");
+                if (no_arguments(argc, argv, "--rect"))
                     return 1;
-                }
+
                 figure->mod = rect;
                 res = parce_rectangle(argc, argv, figure);
                 break;
             case ornament:
+                if (no_arguments(argc, argv, "--ornament"))
+                    return 1;
 
                 figure->mod = ornament;
                 res = parce_ornament(argc, argv, figure);
                 break;
             case rotate:
+                if (no_arguments(argc, argv, "--rotate"))
+                    return 1;
                 figure->mod = rotate;
                 res = parce_rotate(argc, argv, figure);
                 break;
             case circ:
+                if (no_arguments(argc, argv, "--circle"))
+                    return 1;
                 figure->mod = circ;
                 res = parce_circle(argc, argv, figure);
                 break;
@@ -1209,7 +1232,7 @@ int main(int argc, char* argv[]){
     constuctor(figure);
 
 
-    base_parser(figure, argc, argv);
+    if (base_parser(figure, argc, argv)) return 41;
 
     if (base_checker(figure)) return 42;
 
