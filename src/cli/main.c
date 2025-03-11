@@ -7,19 +7,25 @@
 #include "parcer/parcer.h"
 #include "checker/base_checker.h"
 
+
+/**
+ * @brief Функция конструктор заполняет структуру базовыми значениями, предполагается, что такие значения не могут
+ * получится в случае парсера, поэтому можно будет проверить, ввел ли пользователь тому или иному полю значение.
+ * @param obj Объект, который нужно инициализировать.
+ */
 void constuctor(object_t* obj) {
     obj->mod = None;
     obj->start_filename = NULL;
     obj->finish_filename = "out.bmp";
-    obj->x_left_up = -1;
-    obj->y_left_up = -1;
-    obj->x_right_down = -1;
-    obj->y_right_down = -1;
+    obj->x_left_up = INT_MIN;
+    obj->y_left_up = INT_MIN;
+    obj->x_right_down = INT_MIN;
+    obj->y_right_down = INT_MIN;
     obj->pattern = none;
     obj->count = -1;
     obj->angle = -1;
-    obj->x_center = -1;
-    obj->y_center = -1;
+    obj->x_center = INT_MIN;
+    obj->y_center = INT_MIN;
     obj->radius = -1;
     obj->thinckness = -1;
     obj->fill = false;
@@ -35,10 +41,10 @@ int main(int argc, char* argv[]){
     object_t* figure = malloc(sizeof(object_t));
     constuctor(figure);
 
-    int res = base_parser(figure, argc, argv);
-    if (res != 0) return 41;
 
-    int result_chek = base_checker(figure);
+    if (base_parser(figure, argc, argv)) return 41;
+
+    if (base_checker(figure)) return 42;
 
     printf("mod %d\n", figure->mod);
     printf("pattern %d\n", figure->pattern);
@@ -55,9 +61,9 @@ int main(int argc, char* argv[]){
     printf("x_c, y_c %d  %d\n", figure->x_center, figure->y_center);
     printf("rad %d\n", figure->radius);
 
-    if (figure->start_filename != NULL) {
-        puts(figure->start_filename);
-    }
+
+    puts(figure->start_filename);
+
     puts(figure->finish_filename);
     free(figure);
 

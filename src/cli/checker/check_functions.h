@@ -4,10 +4,10 @@
 #include "base_checker.h"
 #include "help_functions.h"
 
-int check_rectangle(object_t*);
-int check_circle(object_t*);
-int check_ornament(object_t*);
-int check_rotate(object_t* figure);
+bool check_rectangle(object_t*);
+bool check_circle(object_t*);
+bool check_ornament(object_t*);
+bool check_rotate(object_t* figure);
 
 #endif // CHECK_FUNCTIONS_H
 

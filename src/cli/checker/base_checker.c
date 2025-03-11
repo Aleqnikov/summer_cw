@@ -9,9 +9,9 @@
  * @brief Данная функция является проверкой корректности переданнх значений, соответствие режимам и т.п.
  * Простые проверки производит сама, но более ветвистые перераспределяет по зависимым вспомогательным функциям.
  * @param figure Указатель на проверяемый объект
- * @return Если все проверки прошли, то ноль, в ином случае код ошибки.
+ * @return Если все проверки прошли, то ноль, в ином случае код ошибки.x
  */
-int base_checker(object_t* figure) {
+bool base_checker(object_t* figure) {
     if (figure->start_filename == NULL) {
         fprintf(stderr, "Error: Не было введено имя файла!\n");
         return 1;
@@ -36,19 +36,21 @@ int base_checker(object_t* figure) {
     switch (figure->mod) {
         case rect:
             res_check = check_rectangle(figure);
-        break;
+            break;
         case ornament:
             res_check = check_ornament(figure);
-        break;
+            break;
         case rotate:
             res_check = check_rotate(figure);
-        break;
+            break;
         case circ:
             res_check = check_circle(figure);
-        break;
+            break;
+        case info:   // Избыточно, так как уже проверяется корректность имени файла.
+            break;
         default:
             fprintf(stderr, "Error: Невозможная ошибка!\n");
-        return 1;
+            return 1;
     }
 
     return res_check;

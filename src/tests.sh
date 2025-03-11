@@ -29,6 +29,6 @@ test_cases=(
 for test_case in "${test_cases[@]}"
 do
     echo "Running: ./a.out $test_case"
-    ./a.out $test_case
+    eval "./a.out $test_case"
     echo ""
 done

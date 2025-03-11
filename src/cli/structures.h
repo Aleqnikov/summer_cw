@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <limits.h>
 
 /**
  * @brief Перечисление режимов для орнамента.
@@ -23,16 +24,21 @@ typedef enum Pattern {rectangle, circle, semicircle, none} pattern_t;
  */
 typedef enum Mode {rect, ornament, rotate, circ, info, help, None} mode;
 
+/**
+ * @brief Данное перечисление является хранилищем режимов для функции comp_cnt_args.
+ */
+enum count_arguments {one_read = 1, two_read = 2, three_read = 3};
+
 
 /**
- * @brief Структура, которая является собирательным образом всех парметров, которые нужны для
+ * @brief Структура, которая является собирательным образом всех парметров, которые нужны для 
  * работы каждого из режимов. Предполагается, что взаимодействие внутри программы происходит
  * за счёт последовательной передачи объекта данной структуры.
  */
 
 typedef struct Object {
     /** @brief Режим работы программы.*/
-    mode mod;
+    mode mod;  
 
     char* start_filename;                               /** @brief Имя файла, который нужно обработать.*/
     char* finish_filename;                              /** @brief Имя файла, который должно быть после обработки.*/
@@ -57,7 +63,6 @@ typedef struct Object {
     int x_center, y_center;                             /** @brief Координаты центра окружности.*/
     int radius;                                         /** @brief Радиус окружности*/
 } object_t ;
-
 /**
  * @brief Функция конструктор заполняет структуру базовыми значениями, предполагается, что такие значения не могут
  * получится в случае парсера, поэтому можно будет проверить, ввел ли пользователь тому или иному полю значение.
