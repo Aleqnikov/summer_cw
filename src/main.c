@@ -1010,6 +1010,11 @@ bool checker_thinckness(object_t* figure) {
         fprintf(stderr, "Error: Вы не ввели толщину линии!\n");
         return 1;
     }
+
+    if (figure->thinckness <= 0) {
+        fprintf(stderr, "Error: Передана неккоректная толщина линии, должна быть больше нуля!\n");
+        return 1;
+    }
     return 0;
 }
 
