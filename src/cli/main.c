@@ -1,6 +1,6 @@
 /**
 * @file main.с
- * @brief Файл программы.
+ * @brief Основной файл программы.
  */
 
 #include "structures.h"
