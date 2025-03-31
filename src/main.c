@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <limits.h>
+#include <math.h>
 
 /** 
  * @file main.с
@@ -35,6 +36,42 @@ typedef enum Mode {rect, ornament, rotate, circ, info, help, None} mode;
  * программа. Используется в случае, если нужно проверить, сколько аргументов считала программа.
  */
 enum count_arguments {one_read = 1, two_read = 2, three_read = 3};
+
+
+
+#pragma pack(push, 1)
+/**
+* @breif Набор структур для чтения BMP
+*/
+typedef struct {
+    unsigned short signature;
+    unsigned int filesize;
+    unsigned short reserved1;
+    unsigned short reserved2;
+    unsigned int pixelArrOffset;
+} BitmapFileHeader;
+
+typedef struct {
+    unsigned int headerSize;
+    unsigned int width;
+    unsigned int height;
+    unsigned short planes;
+    unsigned short bitsPerPixel;
+    unsigned int compression;
+    unsigned int imageSize;
+    unsigned int xPixelsPerMeter;
+    unsigned int yPixelsPerMeter;
+    unsigned int colorsInColorTable;
+    unsigned int importantColorCount;
+} BitmapInfoHeader;
+
+typedef struct {
+    unsigned char b;
+    unsigned char g;
+    unsigned char r;
+} Rgb;
+
+#pragma pack(pop)
 
 
 /**
@@ -74,6 +111,275 @@ typedef struct Object {
     int x_center, y_center;                             /** @brief Координаты центра окружности.*/
     int radius;                                         /** @brief Радиус окружности*/
 } object_t ;
+
+
+
+
+/*
+___________________________IMAGE_TOOLS_________________________________________________________
+ */
+
+
+/**
+ * @brief Функция которая печатает информацию headera файла.
+ */
+void print_file_header(BitmapFileHeader bmfh){
+    printf("signature: \t%x (%hu)\n", bmfh.signature, bmfh.signature);
+    printf("filesize: \t%x (%u)\n", bmfh.filesize, bmfh.filesize);
+    printf("reserved1: \t%x (%hu)\n", bmfh.reserved1, bmfh.reserved1);
+    printf("reserved2: \t%x (%hu)\n", bmfh.reserved2, bmfh.reserved2);
+    printf("pixelArrOffset: \t%x (%u)\n", bmfh.pixelArrOffset, bmfh.pixelArrOffset);
+}
+
+/**
+ * @brief Функция которая печатает информацию headera информации.
+ */
+void print_info_header(BitmapInfoHeader bmih){
+    printf("headerSize: \t%x (%u)\n", bmih.headerSize, bmih.headerSize);
+    printf("width: \t%x (%u)\n", bmih.width, bmih.width);
+    printf("height: \t%x (%u)\n", bmih.height, bmih.height);
+    printf("planes: \t%x (%hu)\n", bmih.planes, bmih.planes);
+    printf("bitsPerPixel: \t%x (%hu)\n", bmih.bitsPerPixel, bmih.bitsPerPixel);
+    printf("compression: \t%x (%u)\n", bmih.compression, bmih.compression);
+    printf("imageSize: \t%x (%u)\n", bmih.imageSize, bmih.imageSize);
+    printf("xpixelsPerMeter: \t%x (%u)\n", bmih.xPixelsPerMeter, bmih.xPixelsPerMeter);
+    printf("ypixelsPerMeter: \t%x (%u)\n", bmih.yPixelsPerMeter, bmih.yPixelsPerMeter);
+    printf("colorsInColorTable: \t%x (%u)\n", bmih.colorsInColorTable, bmih.colorsInColorTable);
+    printf("importantColorCount: \t%x (%u)\n", bmih.importantColorCount, bmih.importantColorCount);
+}
+
+
+int get_padding(unsigned int width){
+    return ((width*3 + 3) & (~3));
+}
+
+/**
+ * @brief Данная функция проверяет, выходит ли за пределы изображения координаты.
+ */
+bool check_coord(int y, int x, int height, int weight){
+    if((x >= 0 && x <= weight) && (y >= 0 && y <= height))
+        return 1;
+    return 0;
+}
+
+/**
+* @brief Данная функция считывает изображение BMP
+*/
+int read_bmp(const char* filename, BitmapFileHeader* file_header, BitmapInfoHeader* info_header, Rgb*** data){
+    FILE* file = fopen(filename, "rb");
+
+
+    if(!file){
+        fprintf(stderr, "Error: Не удалось открыть файл!\n");
+        return 0;
+    }
+
+    fread(file_header, sizeof(BitmapFileHeader), 1, file);
+    fread(info_header, sizeof(BitmapInfoHeader), 1, file);
+
+    if(file_header->signature != 0x4D42){
+        fprintf(stderr, "Error: Файл не является bmp.\n");
+        return 0;
+    }
+
+    if(info_header->bitsPerPixel != 24){
+        fprintf(stderr, "Error: Программа поддерживает только 24 бита на пиксель!\n");
+        return 0;
+    }
+
+    if (info_header->headerSize  != 124) {
+        fprintf(stderr, "Error: Поддерживается только версия BMPv5!\n");
+        return 0;
+    } 
+
+    if(info_header->compression != 0){
+        fprintf(stderr, "Error: Программа не обрабатывает изображения со сжатием!\n");
+        return 0;
+    }
+
+    fseek(file, file_header->pixelArrOffset, SEEK_SET);
+    int row_padded = get_padding(info_header->width);
+
+    // Выделяем память для массива указателей на строки пикселей
+    *data = (Rgb** )(malloc(sizeof(Rgb* )* abs(info_header->height)));
+
+    if(!*data){
+        fprintf(stderr, "Error: Не удалось выделить память под массив пикселей!\n");
+        return 0;
+    }
+
+    for (int i = 0; i < abs(info_header->height); i++){
+
+    
+        (*data)[i] = (Rgb *)malloc(info_header->width * sizeof(Rgb));
+
+        if(!(*data)[i]){
+            fprintf(stderr, "Error: Не удалось выделить память под строку пикселей!.\n");
+            return 0;
+        }
+    }
+
+    for(int i = 0; i < abs(info_header->height); i++){
+        for(int j = 0; j < info_header->width; j++){
+            fread(&(*data)[i][j], sizeof(Rgb), 1, file);
+        }
+
+        fseek(file, row_padded - info_header->width*3, SEEK_CUR);
+    }
+
+    fclose(file);
+
+   return 1;
+
+}
+
+
+
+/**
+ * @brief Данная функция записывает в файл.
+ */
+int write_bmp(const char* filename, const BitmapFileHeader* bmfh, const BitmapInfoHeader* bmih, Rgb** data){
+    FILE* file = fopen(filename, "wb");
+
+    if(!file){
+        fprintf(stderr, "Error: Не удалось открыть файл для записи выходного изображения.\n");
+        return 1;
+    }
+
+    fwrite(bmfh, sizeof(BitmapFileHeader), 1, file);
+    fwrite(bmih, sizeof(BitmapInfoHeader), 1, file);
+
+    fseek(file, bmfh->pixelArrOffset, SEEK_SET);
+
+    int row_paded = get_padding(bmih->width);
+
+    for(int y = 0; y < abs(bmih->height); y++){
+        for(int x = 0; x < bmih->width; x++){
+            fwrite(&data[y][x], sizeof(Rgb), 1, file);
+        }
+
+        // Добавляеся padding для выравнивания строки кратности 4.
+        unsigned char padding = 0;
+        for(int i = 0; i < row_paded - bmih->width*3; i++)
+            fwrite(&padding, sizeof(unsigned char), 1, file);
+    }
+
+    fclose(file);
+    return 0;
+}
+
+
+
+
+bool check_draw_thincless(int y, int x, int thincless, int x_min, int x_max, int y_min, int y_max){
+    if(y >= y_min - thincless && y <= y_max + thincless && x >= x_min - thincless && x < x_min)
+        return 1;
+    
+    if(y >= y_min - thincless && y <= y_max + thincless && x > x_max  && x <= x_max + thincless)
+        return 1;
+
+    if(x >= x_min - thincless && x <= x_max + thincless && y >= y_min - thincless && y < y_min)
+        return 1;
+    
+    if(x >= x_min - thincless && x <= x_max + thincless && y > y_max  && y <= y_max + thincless)
+        return 1;
+
+    return 0;
+}
+
+int draw_rectangle(object_t info_m){
+    BitmapFileHeader bmfh;
+    BitmapInfoHeader bmih;
+    Rgb **data = NULL;
+
+    if(!read_bmp(info_m.start_filename, &bmfh, &bmih, &data)){
+        fprintf(stderr, "Error: Не удалось считать данные из файла.\n");
+        return 0;
+    }
+
+    Rgb color = {info_m.color_b, info_m.color_g, info_m.color_r};
+    Rgb color_thinckless = {info_m.color_fill_b, info_m.color_fill_g, info_m.color_fill_r};
+
+    for(int y = info_m.y_right_down - info_m.thinckness; y <= info_m.y_left_up + info_m.thinckness; y++){
+        for(int x = info_m.x_left_up - info_m.thinckness; x <= info_m.x_right_down + info_m.thinckness; x++){
+
+            if(check_draw_thincless(y, x, info_m.thinckness, info_m.x_left_up, info_m.x_right_down, info_m.y_right_down, info_m.y_left_up) && check_coord(y, x, bmih.height, bmih.width))
+                    data[y][x] = color_thinckless;
+
+            if(info_m.fill){
+                if(x <= info_m.x_right_down && x >= info_m.x_left_up && y >= info_m.y_right_down && y <= info_m.y_left_up && check_coord(y, x, bmih.height, bmih.width))
+                    data[y][x] = color;
+            }
+
+        }
+    }
+
+    // Записываем измененное изображение
+    if (!write_bmp(info_m.finish_filename, &bmfh, &bmih, data)) {
+        return 1;
+    }
+
+    // Освобождаем память
+    for (int i = 0; i < (bmih.height); i++) {
+        free(data[i]);
+    }
+    free(data);
+
+    return 0;
+}
+
+
+int draw_circle(object_t info_m){
+    BitmapFileHeader bmfh;
+    BitmapInfoHeader bmih;
+    Rgb **data = NULL;
+
+    if(!read_bmp(info_m.start_filename, &bmfh, &bmih, &data)){
+        fprintf(stderr, "Error: Не удалось считать данные из файла.\n");
+        return 0;
+    }
+
+    Rgb color = {info_m.color_b, info_m.color_g, info_m.color_r};
+    Rgb color_thinckless = {info_m.color_fill_b, info_m.color_fill_g, info_m.color_fill_r};
+
+    for(int y = info_m.y_center - info_m.radius - info_m.thinckness + 1; y < info_m.y_center + info_m.radius + info_m.thinckness; y++){
+        for(int x = info_m.x_center - info_m.radius - info_m.thinckness + 1; x < info_m.x_center + info_m.radius + info_m.thinckness; x++){
+
+            int radius_pre = pow((x - info_m.x_center), 2) + pow((y - info_m.y_center), 2);
+            int min_rad =  pow(info_m.radius, 2);
+            int max_ras = pow(info_m.radius + info_m.thinckness, 2);
+
+
+            if(radius_pre <= max_ras && radius_pre >= min_rad && check_coord(y, x, bmih.height, bmih.width))
+                data[y][x] = color_thinckless;
+                
+
+            if(info_m.fill){
+                if(radius_pre < min_rad && check_coord(y, x, bmih.height, bmih.width))
+                    data[y][x] = color;
+            }   
+
+        }
+    }
+
+    // Записываем измененное изображение
+    if (!write_bmp(info_m.finish_filename, &bmfh, &bmih, data)) {
+        return 1;
+    }
+
+    // Освобождаем память
+    for (int i = 0; i < (bmih.height); i++) {
+        free(data[i]);
+    }
+    free(data);
+
+    return 0;
+}
+
+
+/*
+___________________________CLI_TOOOLS_________________________________________________________
+ */
 
 /**
  * @brief Функция конструктор заполняет структуру базовыми значениями, предполагается, что такие значения не могут
@@ -238,7 +544,7 @@ bool no_arguments(int argc, char** argv, char* flag_name) {
  * @param name Имя функции, где произошла проверка.
  * @return Единицу, если слишком много аргументов, ноль, если все в норме.
  */
-bool is_correct_count_args(int argc, char** argv, char* name) {
+bool is_correct_count_args(int argc, char** argv, char* name, char* start_filename ) {
     if (!optarg) {
         fprintf(stderr, "Error: Не был передан аргумент для %s!\n", name);
         return 1;
@@ -249,7 +555,9 @@ bool is_correct_count_args(int argc, char** argv, char* name) {
         return 1;
     }
 
-    if ( optind < argc && argv[optind][0] != '-' && !(isalpha(argv[optind][0]) && optind  + 1 == argc)) {
+
+    printf("%s %d argc %d f1 %d\n", name, optind, argc, isalpha(argv[optind][0]));
+    if ( optind < argc && argv[optind][0] != '-' && (optind  + 1 != argc && start_filename == NULL)){
         fprintf(stderr, "Error: вы ввели слишком много аргументов для %s\n", name);
         return 1;
     }
@@ -295,8 +603,8 @@ bool comp_cnt_args(int read_count, int correct_count, char* name_mode) {
  * @param name Название флага.
  * @return Если все правильно, то 0, иначе код ошибки.
  */
-bool check_color(int argc, char** argv, char* name) {
-    int count_args = is_correct_count_args(argc, argv, name);
+bool check_color(int argc, char** argv, char* name, char* filename_inp) {
+    int count_args = is_correct_count_args(argc, argv, name, filename_inp);
     if (count_args != 0) return count_args;
 
     if (is_correct_dots(optarg, 2)) {
@@ -343,9 +651,9 @@ bool check_colors(int count_read, int red, int green, int blue) {
  * @param name Имя проверяемого флага.
  * @return Ноль, если все в порядке, единицу в противном случае.
  */
-bool parce_coords(int argc, char** argv, char* name) {
+bool parce_coords(int argc, char** argv, char* name, char* filename_start) {
     // Проверка на корректность количества аргументов.
-    int count_args = is_correct_count_args(argc, argv, name);
+    int count_args = is_correct_count_args(argc, argv, name, filename_start);
     if (count_args != 0) return count_args;
 
     // Вторая проверка, на количество точек, гарантирует, что передано правильно количество аргументов.
@@ -370,7 +678,7 @@ bool parce_coords(int argc, char** argv, char* name) {
  * @return Возвращает ноль, если все в порядке, в ином случае либо код ошибки, либо единицу.
  */
 bool left_up(object_t* figure, int argc, char** argv) {
-    int result_coords = parce_coords(argc, argv, "left_up");
+    int result_coords = parce_coords(argc, argv, "left_up", figure->start_filename);
     if (result_coords != 0)
         return result_coords;
 
@@ -398,7 +706,7 @@ bool left_up(object_t* figure, int argc, char** argv) {
  * @return Возвращает ноль, если все в порядке, в ином случае либо код ошибки, либо единицу.
  */
 bool right_down(object_t* figure, int argc, char** argv) {
-    int result_coords = parce_coords(argc, argv, "right_down");
+    int result_coords = parce_coords(argc, argv, "right_down", figure->start_filename);
     if (result_coords != 0)
         return result_coords;
 
@@ -425,7 +733,7 @@ bool right_down(object_t* figure, int argc, char** argv) {
  * @return Ноль, если все в порядке, в ином случает 1.
  */
 bool thickness(object_t* figure, int argc, char** argv) {
-    int count_args = is_correct_count_args(argc, argv, "--thickness");
+    int count_args = is_correct_count_args(argc, argv, "--thickness", figure->start_filename);
     if (count_args != 0) return count_args;
 
     if (!is_number(optarg)) {
@@ -458,7 +766,7 @@ bool thickness(object_t* figure, int argc, char** argv) {
  * @return Если все в порядке, то ноль, в ином случае код ошибки.
  */
 bool color(object_t* figure, int argc, char** argv) {
-    int first_check = check_color(argc, argv, "--color");
+    int first_check = check_color(argc, argv, "--color", figure->start_filename);
     if (first_check != 0) return first_check;
 
     int red, green, blue;
@@ -483,7 +791,7 @@ bool color(object_t* figure, int argc, char** argv) {
  * @return Если все в порядке, то ноль, в ином случае код ошибки.
  */
 bool fill_color(object_t* figure, int argc, char** argv) {
-    int first_check = check_color(argc, argv, "--fill_color");
+    int first_check = check_color(argc, argv, "--fill_color", figure->start_filename);
     if (first_check != 0) return first_check;
 
     int red, green, blue;
@@ -508,7 +816,7 @@ bool fill_color(object_t* figure, int argc, char** argv) {
  * @return Ноль, если все хорошо, в ином случае единицу.
  */
 bool input_name(object_t* figure, int argc, char** argv) {
-    int check_args = is_correct_count_args(argc, argv, "--input");
+    int check_args = is_correct_count_args(argc, argv, "--input", figure->start_filename);
     if (check_args != 0) return check_args;
 
     figure->start_filename = optarg;
@@ -527,7 +835,7 @@ bool input_name(object_t* figure, int argc, char** argv) {
  * @return Если все нормально ноль, в ином случае код ошибки.
  */
 bool output_name(object_t* figure, int argc, char** argv) {
-    int check_args = is_correct_count_args(argc, argv, "output_name");
+    int check_args = is_correct_count_args(argc, argv, "output_name", figure->start_filename);
     if (check_args != 0) return check_args;
 
     figure->finish_filename = optarg;
@@ -575,7 +883,7 @@ void get_filename(object_t* figure, int argc, char** argv) {
  * @return Ноль в случае удачи, код ошибки в ином случае.
  */
 bool angle(object_t* figure, int argc, char** argv) {
-    if (is_correct_count_args(argc, argv, "--angle"))
+    if (is_correct_count_args(argc, argv, "--angle", figure->start_filename))
         return 1;
 
     if (!is_number(optarg)) {
@@ -609,7 +917,7 @@ bool angle(object_t* figure, int argc, char** argv) {
  * @return Ноль в случае успеха, в ином случае код ошибки.
  */
 bool circle_get(object_t* figure, int argc, char** argv) {
-    if (parce_coords(argc, argv, "--circle"))
+    if (parce_coords(argc, argv, "--circle", figure->start_filename))
         return 1;
 
     int x, y;
@@ -634,7 +942,7 @@ bool circle_get(object_t* figure, int argc, char** argv) {
  * @return В случае успеха ноль, в ином случае код ошибки.
  */
 bool radius(object_t* figure, int argc, char** argv) {
-    if (parce_coords(argc, argv, "--radius"))
+    if (parce_coords(argc, argv, "--radius", figure->start_filename))
         return 1;
 
     if (!is_number(optarg)) {
@@ -667,7 +975,7 @@ bool radius(object_t* figure, int argc, char** argv) {
  * @return В случае успеха ноль, в ином случае код ошибки.
  */
 bool count(object_t* figure, int argc, char** argv) {
-    if (is_correct_count_args(argc, argv, "--count"))
+    if (is_correct_count_args(argc, argv, "--count", figure->start_filename))
         return 1;
 
     if (!is_number(optarg)) {
@@ -941,7 +1249,7 @@ bool parce_ornament(int argc, char** argv, object_t* figure) {
     while ((opt = getopt_long(argc, argv, "p:c:t:C:i:o:", long_options, &option_index)) != -1) {
         switch (opt) {
             case 'p': {
-                int count_args = is_correct_count_args(argc, argv, "--pattern");
+                int count_args = is_correct_count_args(argc, argv, "--pattern", figure->start_filename);
                 if (count_args != 0) return count_args;
 
                 if (!strcmp(optarg, "rectangle")) figure->pattern = rectangle;
@@ -1430,9 +1738,13 @@ int main(int argc, char* argv[]){
     printf("rad %d\n", figure->radius);
 
 
+
     puts(figure->start_filename);
 
     puts(figure->finish_filename);
+
+
+    draw_rectangle(*figure);
     free(figure);
 
     return 0;
