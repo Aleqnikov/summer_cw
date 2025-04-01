@@ -7,6 +7,7 @@
 #include <limits.h>
 #include <math.h>
 
+
 /** 
  * @file main.с
  * @brief Весенняя курсовая работа
@@ -329,6 +330,102 @@ int draw_rectangle(object_t info_m){
 }
 
 
+
+Rgb** copy_array(Rgb** data, int height, int width){
+    Rgb** new_array = NULL;
+    new_array = (Rgb** )(malloc(sizeof(Rgb* )* (height)));
+
+    for (int i = 0; i < (height); i++) {
+        (new_array)[i] = (Rgb *)malloc(width * sizeof(Rgb));
+    }
+
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            new_array[i][j] = data[i][j];
+        }
+    }
+
+    return new_array;
+}
+
+int custom_cos(int angle) {
+    switch (angle) {
+        case 90:
+            return 0;
+        case 180:
+            return -1;
+        case 270:
+            return 0;
+    }
+}
+
+int custom_sin(int angle) {
+    switch (angle) {
+        case 90:
+            return 1;
+        case 180:
+            return 0;
+        case 270:
+            return -1;
+    }
+}
+
+/**
+ * @brief Переворачивает часть изображения
+ * 
+ * При помощи преобразований плоскости, мы меняем координаты точек, и затем ставим её на новое место.
+ * Т.е x = xcosa + ysina, y = -xsina + ycosa
+ */
+int rotate_area(object_t figure){
+    BitmapFileHeader bmfh;
+    BitmapInfoHeader bmih;
+    Rgb **data = NULL;
+
+    if(!read_bmp(figure.start_filename, &bmfh, &bmih, &data)){
+        fprintf(stderr, "Error: Не удалось считать данные из файла.\n");
+        return 0;
+    }
+
+    Rgb** new_data = copy_array(data, bmih.height, bmih.width);
+    int x_center = (figure.x_left_up + figure.x_right_down)/2;
+    int y_center = (figure.y_left_up + figure.y_right_down)/2;
+
+
+    for (int y = figure.y_right_down; y <= figure.y_left_up; y++) {
+        for (int x = figure.x_left_up; x <= figure.x_right_down; x++) {
+            // Смещаем пиксель относительно центра
+            int x_shifted = x - x_center;
+            int y_shifted = y - y_center;
+
+            // Поворот
+            int x_new = (int)((x_shifted * custom_cos(figure.angle) + y_shifted * custom_sin(figure.angle)) + x_center);
+            int y_new = (int)((-x_shifted *custom_sin(figure.angle)) + y_shifted * custom_cos(figure.angle) + y_center);
+
+            if(check_coord(x_new, y_new, bmih.height, bmih.width)) {
+                new_data[y_new][x_new] = data[y][x];
+            }
+
+
+        }
+    }
+
+
+    // Записываем измененное изображение
+    if (!write_bmp(figure.finish_filename, &bmfh, &bmih, new_data)){
+        return 1;
+    }
+
+    // Освобождаем память
+    for (int i = 0; i < (bmih.height); i++) {
+        free(new_data[i]);
+        free(data[i]);
+    }
+    free(data);
+    free(new_data);
+
+    return 0;
+}
+
 int draw_circle(object_t info_m){
     BitmapFileHeader bmfh;
     BitmapInfoHeader bmih;
@@ -345,9 +442,9 @@ int draw_circle(object_t info_m){
     for(int y = info_m.y_center - info_m.radius - info_m.thinckness + 1; y < info_m.y_center + info_m.radius + info_m.thinckness; y++){
         for(int x = info_m.x_center - info_m.radius - info_m.thinckness + 1; x < info_m.x_center + info_m.radius + info_m.thinckness; x++){
 
-            int radius_pre = pow((x - info_m.x_center), 2) + pow((y - info_m.y_center), 2);
-            int min_rad =  pow(info_m.radius, 2);
-            int max_ras = pow(info_m.radius + info_m.thinckness, 2);
+            int radius_pre =(x - info_m.x_center)*(x - info_m.x_center) + (y - info_m.y_center)*(y - info_m.y_center);
+            int min_rad =  info_m.radius*info_m.radius;
+            int max_ras = (info_m.radius + info_m.thinckness)*(info_m.radius + info_m.thinckness);
 
 
             if(radius_pre <= max_ras && radius_pre >= min_rad && check_coord(y, x, bmih.height, bmih.width))
@@ -1744,7 +1841,7 @@ int main(int argc, char* argv[]){
     puts(figure->finish_filename);
 
 
-    draw_rectangle(*figure);
+    rotate_area(*figure);
     free(figure);
 
     return 0;

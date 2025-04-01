@@ -36,6 +36,31 @@ typedef struct {
 
 #pragma pack(pop)
 
+
+
+int custom_cos(int angle) {
+    switch (angle) {
+        case 90:
+            return 0;
+        case 180:
+            return -1;
+        case 270:
+            return 0;
+    }
+}
+
+int custom_sin(int angle) {
+    switch (angle) {
+        case 90:
+            return 1;
+        case 180:
+            return 0;
+        case 270:
+            return -1;
+    }
+}
+
+
 // Функция для считывания BMP файла в двумерный массив Rgb
 int read_bmp(const char *input_file, BitmapFileHeader *file_header, BitmapInfoHeader *info_header, Rgb ***data) {
     FILE *file = fopen(input_file, "rb");
@@ -64,29 +89,8 @@ int read_bmp(const char *input_file, BitmapFileHeader *file_header, BitmapInfoHe
     return 1;
 }
 
-// Функция для инвертирования цветов в двумерном массиве
-void invert_colors(Rgb **data, int width, int height) {
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            data[y][x].r = 255 - data[y][x].r;
-            data[y][x].g = 255 - data[y][x].g;
-            data[y][x].b = 255 - data[y][x].b;
-        }
-    }
-}
 
-// Функция для рисования круга в двумерном массиве
-void draw_circle(Rgb **data, int width, int height, int cx, int cy, int r, Rgb color) {
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int dx = x - cx;
-            int dy = y - cy;
-            if (dx * dx + dy * dy - 300 <= r * r && dx * dx + dy * dy > r * r) {
-                data[y][x] = color; 
-            }
-        }
-    }
-}
+
 
 typedef struct Object {
     /** @brief Режим работы программы.*/
@@ -114,111 +118,30 @@ typedef struct Object {
     int radius;                                         /** @brief Радиус окружности*/
 } object_t ;
 
-bool check_draw_thincless(int y, int x, int thincless, int x_min, int x_max, int y_min, int y_max){
-    if(y >= y_min - thincless && y <= y_max + thincless && x >= x_min - thincless && x < x_min)
-        return 1;
-    
-    if(y >= y_min - thincless && y <= y_max + thincless && x > x_max  && x <= x_max + thincless)
-        return 1;
-
-    if(x >= x_min - thincless && x <= x_max + thincless && y >= y_min - thincless && y < y_min)
-        return 1;
-    
-    if(x >= x_min - thincless && x <= x_max + thincless && y > y_max  && y <= y_max + thincless)
-        return 1;
-
-    return 0;
-}
-
-
-void draw_rectangle(Rgb **data){
-
-    object_t info_m;
-    info_m.fill = true;
-    info_m.x_left_up = 10;
-    info_m.x_right_down = 20;
-    info_m.y_right_down = 10;
-    info_m.y_left_up = 20;
 
 
 
-    info_m.thinckness = 1;
 
-    Rgb color = {14, 34, 52};
+Rgb** copy_array(Rgb** data, int height, int width){
+    Rgb** new_array = NULL;
+    new_array = (Rgb** )(malloc(sizeof(Rgb* )* (height)));
 
-    data[200][200] = color;
+    for (int i = 0; i < (height); i++) {
+        (new_array)[i] = (Rgb *)malloc(width * sizeof(Rgb));
+    }
 
-    Rgb color_thinckless = {4, 244, 34};
-
-    for(int y = info_m.y_right_down - info_m.thinckness; y <= info_m.y_left_up + info_m.thinckness; y++){
-        for(int x = info_m.x_left_up - info_m.thinckness; x <= info_m.x_right_down + info_m.thinckness; x++){
-
-            if(check_draw_thincless(y, x, info_m.thinckness, info_m.x_left_up, info_m.x_right_down, info_m.y_right_down, info_m.y_left_up))
-                    data[y][x] = color_thinckless;
-
-            if(info_m.fill){
-                if(x <= info_m.x_right_down && x >= info_m.x_left_up && y >= info_m.y_right_down && y <= info_m.y_left_up)
-                    data[y][x] = color;
-            }
-
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            new_array[i][j] = data[i][j];
         }
     }
+
+    return new_array;
 }
 
-void draw_rectangle2(Rgb **data){
-
-    object_t info_m;
-    info_m.fill = false;
-    info_m.x_left_up = 100;
-    info_m.x_right_down = 300;
-    info_m.y_right_down = 50;
-    info_m.y_left_up = 300;
 
 
 
-    info_m.thinckness = 1;
-
-    Rgb color = {14, 34, 52};
-
-    data[200][200] = color;
-
-    Rgb color_thinckless = {4, 244, 34};
-
-    if(info_m.fill){
-
-        for(int y = info_m.y_right_down - info_m.thinckness; y < info_m.y_left_up + info_m.thinckness; y++){
-            for(int x = info_m.x_left_up - info_m.thinckness; x < info_m.x_right_down + info_m.thinckness; x++){
-                
-                data[y][x] = color;
-            }
-        }
-    } else{
-        
-        // Рисуем боковые стороны прямоугольника. 
-        for(int y = info_m.y_right_down - info_m.thinckness; y < info_m.y_left_up + info_m.thinckness; y++){
-            for(int x = info_m.x_left_up - info_m.thinckness; x < info_m.x_left_up ; x++){
-                
-                    data[y][x] = color;
-            }
-            for(int x = info_m.x_right_down; x < info_m.x_right_down + info_m.thinckness; x++){
-                
-                    data[y][x] = color;
-            }
-        }
-
-        // Рисуем верхние стороны прямоугольника. 
-        for(int x = info_m.x_left_up - info_m.thinckness; x < info_m.x_right_down + info_m.thinckness; x++){
-            for(int y = info_m.y_right_down - info_m.thinckness ; y < info_m.x_left_up ; y++){
-              
-                    data[y][x] = color;
-            }
-            for(int y = info_m.y_left_up; y < info_m.y_left_up + info_m.thinckness; y++){
-                
-                    data[y][x] = color;
-            }
-        }
-    }    
-}
 
 // Функция для записи BMP файла из двумерного массива
 int write_bmp(const char *output_file, const BitmapFileHeader *file_header, const BitmapInfoHeader *info_header, Rgb **data) {
@@ -251,7 +174,7 @@ int write_bmp(const char *output_file, const BitmapFileHeader *file_header, cons
 }
 
 int main() {
-    char input_file[256] = "./dataset/picture1.bmp";
+    char input_file[256] = "./src/dataset/picture1.bmp";
     char output_file[256] = "output.bmp";
 
     BitmapFileHeader file_header;
@@ -270,15 +193,38 @@ int main() {
     // Цвет круга (например, красный)
     Rgb circle_color = {0, 0, 255};  // RGB: красный
 
-    // Рисуем круг
-    draw_circle(data, info_header.width, info_header.height, circle_center_x, circle_center_y, circle_radius, circle_color);
 
-    draw_rectangle(data);
-    // Инвертируем цвета
-    invert_colors(data, info_header.width, info_header.height);
+    object_t info_m;
+    info_m.angle = 90;
+    info_m.x_left_up = 100;
+    info_m.x_right_down = 400;
+    info_m.y_right_down = 100;
+    info_m.y_left_up = 110;
+
+    int x_center = (info_m.x_left_up + info_m.x_right_down)/2;
+    int y_center = (info_m.y_left_up + info_m.y_right_down)/2;
+    Rgb** new_data = copy_array(data, info_header.height, info_header.width);
+
+    for (int y = info_m.y_right_down; y <= info_m.y_left_up; y++) {
+        for (int x = info_m.x_left_up; x <= info_m.x_right_down; x++) {
+            // Смещаем пиксель относительно центра
+            int x_shifted = x - x_center;
+            int y_shifted = y - y_center;
+
+            // Поворот
+            int x_new = (int)((x_shifted * custom_cos(info_m.angle) + y_shifted * custom_sin(info_m.angle)) + x_center);
+            int y_new = (int)((-x_shifted *custom_sin(info_m.angle)) + y_shifted * custom_cos(info_m.angle) + y_center);
+            
+            new_data[y_new][x_new] = data[y][x];
+
+        }
+    }
+
+
+
 
     // Записываем измененное изображение
-    if (!write_bmp(output_file, &file_header, &info_header, data)) {
+    if (!write_bmp(output_file, &file_header, &info_header, new_data)) {
         return 1;
     }
 
