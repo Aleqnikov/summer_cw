@@ -113,6 +113,13 @@ typedef struct Object {
     int radius;                                         /** @brief Радиус окружности*/
 } object_t ;
 
+/**
+ * @brief Используется при получении координат растровых фигут.
+ */
+typedef struct {
+    int x, y;
+} point_t;
+
 
 
 
@@ -426,7 +433,202 @@ int rotate_area(object_t figure){
     return 0;
 }
 
+
+// Draw circle brezenchem method
+int get_circle_coords(int r, point_t* circle) {
+
+    int x = 0;
+    int y = r;
+    int delta = 1 - 2 * r;
+    int error = 0;
+
+    int index = 0;
+    while(y >= 0) {
+        circle[index].x = x; circle[index].y = y;
+        index++;
+        error = 2 * (delta + y) - 1;
+        if(delta < 0 && error <= 0) {
+            ++x;
+            delta += 2 * x + 1;
+            continue;
+        }
+        if(delta >= 0 && error > 0) {
+            --y;
+            delta += 1 - 2 * y;
+            continue;
+        }
+        ++x;
+        delta += 2 * (x - y);
+        --y;
+    }
+
+    return index;
+}
+
+
+int get_y_limit_up(point_t* circle, int len, int x_val, int base_value, int x_c) {
+    int y = INT_MIN;
+    for (int i = 0; i <= len; i++) {
+        if (circle[i].x + x_c == x_val) {
+            y = y > circle[i].y ? y : circle[i].y;
+        }
+    }
+
+    if (y == INT_MIN)
+        return 0;
+
+    return y;
+}
+
+
+int get_y_limit_down(point_t* circle, int len, int x_val, int base_value, int x_c) {
+    int y = INT_MAX;
+    for (int i = 0; i < len; i++) {
+
+        if (circle[i].x + x_c == x_val) {
+            y = y < circle[i].y ? y : circle[i].y;
+        }
+        printf("%d %d\n", y, circle[i].x + x_c);
+    }
+
+    if (y == INT_MAX)
+        return 0;
+    return y;
+}
+
+
+int draw_thicnless(Rgb*** data, point_t* circle_m, point_t* circle_b, object_t* figure, int w, int h, int len_min, int len_big) {
+
+    int x_min = figure->x_center; int x_max = figure->radius + figure->x_center + figure->thinckness / 2;
+    int y_min = figure->y_center; int y_max = figure->radius + figure->y_center + figure->thinckness / 2;
+
+    Rgb color = {figure->color_b, figure->color_g, figure->color_r};
+    for (int j = x_min; j <= x_max; j++) {
+        int y_up_lim = get_y_limit_up(circle_b, len_big, j, y_min, figure->x_center);
+        int y_down_lim = get_y_limit_down(circle_m, len_min, j, y_min, figure->x_center);
+
+        for (int i = y_down_lim; i <= y_up_lim; i++) {
+            if (check_coord(y_min + i, j, h, w))
+                (*data)[y_min + i][j] = color;
+            if (check_coord(y_min - i, j, h, w))
+                (*data)[y_min - i][j] = color;
+            if (check_coord(y_min + i, 2*x_min - j, h, w))
+                (*data)[y_min + i][2*x_min - j] = color;
+            if (check_coord(y_min - i, 2* x_min - j, h, w))
+                (*data)[y_min - i][2* x_min - j] = color;
+        }
+
+
+
+    }
+
+    return 1;
+}
+
+int draw_circle3(object_t figure) {
+    BitmapFileHeader bmfh;
+    BitmapInfoHeader bmih;
+    Rgb **data = NULL;
+
+    if(!read_bmp(figure.start_filename, &bmfh, &bmih, &data)){
+        fprintf(stderr, "Error: Не удалось считать данные из файла.\n");
+        return 0;
+    }
+
+    Rgb color = {figure.color_b, figure.color_g, figure.color_r};
+    Rgb color_thinckless = {figure.color_fill_b, figure.color_fill_g, figure.color_fill_r};
+
+    figure.thinckness = (figure.thinckness  % 2 == 0) ? figure.thinckness + 1 : figure.thinckness;
+
+
+
+    point_t min_circle[(figure.radius - figure.thinckness / 2 )*(figure.radius - figure.thinckness / 2)];
+    point_t big_circle[(figure.radius - figure.thinckness / 2 )*(figure.radius - figure.thinckness / 2)];
+
+    int len_min = get_circle_coords(figure.radius - figure.thinckness / 2, min_circle);
+    int len_big = get_circle_coords(figure.radius + figure.thinckness / 2, big_circle);
+
+    draw_thicnless(&data, min_circle, big_circle, &figure, bmih.width, bmih.height, len_min, len_big);
+
+    // Записываем измененное изображение
+    if (!write_bmp(figure.finish_filename, &bmfh, &bmih, data)) {
+        return 1;
+    }
+
+    // Освобождаем память
+    for (int i = 0; i < (bmih.height); i++) {
+        free(data[i]);
+    }
+    free(data);
+
+    return 0;
+
+}
+
+int draw_cicle_2(object_t figure) {
+    BitmapFileHeader bmfh;
+    BitmapInfoHeader bmih;
+    Rgb **data = NULL;
+
+    if(!read_bmp(figure.start_filename, &bmfh, &bmih, &data)){
+        fprintf(stderr, "Error: Не удалось считать данные из файла.\n");
+        return 0;
+    }
+
+    Rgb color = {figure.color_b, figure.color_g, figure.color_r};
+    Rgb color_thinckless = {figure.color_fill_b, figure.color_fill_g, figure.color_fill_r};
+
+    // Применяем алгоритм Брезенхэма
+
+
+        int x = 0;
+        int y = figure.radius;
+        int delta = 1 - 2 * figure.radius;
+        int error = 0;
+
+        int y_c = figure.y_center;
+        int x_c = figure.x_center;
+
+        while(y >= 0) {
+            data[y_c + y][x_c + x] = color;
+            data[y_c - y][x_c + x] = color;
+            data[y_c + y][x_c - x] = color;
+            data[y_c - y][x_c - x] = color;
+            error = 2 * (delta + y) - 1;
+            if(delta < 0 && error <= 0) {
+                ++x;
+                delta += 2 * x + 1;
+                continue;
+            }
+            if(delta >= 0 && error > 0) {
+                --y;
+                delta += 1 - 2 * y;
+                continue;
+            }
+            ++x;
+            delta += 2 * (x - y);
+            --y;
+        }
+
+
+
+    // Записываем измененное изображение
+    if (!write_bmp(figure.finish_filename, &bmfh, &bmih, data)) {
+        return 1;
+    }
+
+    // Освобождаем память
+    for (int i = 0; i < (bmih.height); i++) {
+        free(data[i]);
+    }
+    free(data);
+
+    return 0;
+}
+
 int draw_circle(object_t info_m){
+
+
     BitmapFileHeader bmfh;
     BitmapInfoHeader bmih;
     Rgb **data = NULL;
@@ -653,7 +855,7 @@ bool is_correct_count_args(int argc, char** argv, char* name, char* start_filena
     }
 
 
-    printf("%s %d argc %d f1 %d\n", name, optind, argc, isalpha(argv[optind][0]));
+
     if ( optind < argc && argv[optind][0] != '-' && (optind  + 1 != argc && start_filename == NULL)){
         fprintf(stderr, "Error: вы ввели слишком много аргументов для %s\n", name);
         return 1;
@@ -1841,7 +2043,8 @@ int main(int argc, char* argv[]){
     puts(figure->finish_filename);
 
 
-    rotate_area(*figure);
+    draw_circle3(*figure);
+    
     free(figure);
 
     return 0;
