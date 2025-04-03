@@ -466,11 +466,55 @@ int get_circle_coords(int r, point_t* circle) {
 }
 
 
+// Function implementing Bresenham's circle algorithm for the entire first quarter of the circle
+int circ_bre(int rad, point_t* circle){
+    int x = 0;
+    int y = rad;
+    int d = 3 - 2 * rad;  // Initial decision parameter
+
+    int index = 0;
+
+    // Generate points for the first quarter (x >= 0, y >= 0, x² + y² ≈ r²)
+    while (x <= y)
+    {
+        // Store the point in the first octant (x, y)
+        circle[index].x = x;
+        circle[index].y = y;
+        index++;
+
+        // Store the symmetric point in the second octant (y, x) — тоже в первой четверти!
+        if (x != y)  // Чтобы не дублировать точку при x == y (на диагонали)
+        {
+            circle[index].x = y;
+            circle[index].y = x;
+            index++;
+        }
+
+        // Update decision parameter and coordinates
+        if (d < 0)
+        {
+            d = d + 4 * x + 6;
+        }
+        else
+        {
+            d = d + 4 * (x - y) + 10;
+            y--;
+        }
+        x++;
+    }
+
+    return index;  // Return the number of points stored
+}
+
+
+
+
+
 int get_y_limit_up(point_t* circle, int len, int x_val, int base_value, int x_c) {
     int y = INT_MIN;
     for (int i = 0; i <= len; i++) {
-        if (circle[i].x + x_c == x_val) {
-            y = y > circle[i].y ? y : circle[i].y;
+        if ((circle[i]).x + x_c == x_val) {
+            y = y >(circle[i]).y ? y : (circle[i]).y;
         }
     }
 
@@ -485,10 +529,9 @@ int get_y_limit_down(point_t* circle, int len, int x_val, int base_value, int x_
     int y = INT_MAX;
     for (int i = 0; i < len; i++) {
 
-        if (circle[i].x + x_c == x_val) {
-            y = y < circle[i].y ? y : circle[i].y;
+        if ((circle[i]).x + x_c == x_val) {
+            y = y < (circle[i]).y ? y : (circle[i]).y;
         }
-        printf("%d %d\n", y, circle[i].x + x_c);
     }
 
     if (y == INT_MAX)
@@ -497,13 +540,13 @@ int get_y_limit_down(point_t* circle, int len, int x_val, int base_value, int x_
 }
 
 
-int draw_thicnless(Rgb*** data, point_t* circle_m, point_t* circle_b, object_t* figure, int w, int h, int len_min, int len_big) {
-
+int draw_thicnless(Rgb*** data, point_t* circle_m, point_t* circle_b, object_t* figure, int w, int h, int len_min, int len_big, Rgb color) {
     int x_min = figure->x_center; int x_max = figure->radius + figure->x_center + figure->thinckness / 2;
     int y_min = figure->y_center; int y_max = figure->radius + figure->y_center + figure->thinckness / 2;
 
-    Rgb color = {figure->color_b, figure->color_g, figure->color_r};
+
     for (int j = x_min; j <= x_max; j++) {
+
         int y_up_lim = get_y_limit_up(circle_b, len_big, j, y_min, figure->x_center);
         int y_down_lim = get_y_limit_down(circle_m, len_min, j, y_min, figure->x_center);
 
@@ -520,6 +563,32 @@ int draw_thicnless(Rgb*** data, point_t* circle_m, point_t* circle_b, object_t* 
 
 
 
+    }
+
+    return 1;
+}
+
+
+int draw_fill_circle(Rgb*** data, point_t* circle_m, object_t* figure, int rad,  int w, int h, int len_min, Rgb color) {
+    int x_min = figure->x_center; int x_max = rad + figure->x_center ;
+    int y_min = figure->y_center; int y_max = rad + figure->y_center;
+
+
+    for (int j = x_min; j <= x_max; j++) {
+
+        int y_up_lim = get_y_limit_up(circle_m, len_min, j, y_min, figure->x_center);
+
+
+        for (int i = 0; i <= y_up_lim; i++) {
+            if (check_coord(y_min + i, j, h, w))
+                (*data)[y_min + i][j] = color;
+            if (check_coord(y_min - i, j, h, w))
+                (*data)[y_min - i][j] = color;
+            if (check_coord(y_min + i, 2*x_min - j, h, w))
+                (*data)[y_min + i][2*x_min - j] = color;
+            if (check_coord(y_min - i, 2* x_min - j, h, w))
+                (*data)[y_min - i][2* x_min - j] = color;
+        }
     }
 
     return 1;
@@ -543,12 +612,22 @@ int draw_circle3(object_t figure) {
 
 
     point_t min_circle[(figure.radius - figure.thinckness / 2 )*(figure.radius - figure.thinckness / 2)];
-    point_t big_circle[(figure.radius - figure.thinckness / 2 )*(figure.radius - figure.thinckness / 2)];
+    point_t big_circle[(figure.radius + figure.thinckness / 2 )*(figure.radius + figure.thinckness / 2)];
 
-    int len_min = get_circle_coords(figure.radius - figure.thinckness / 2, min_circle);
-    int len_big = get_circle_coords(figure.radius + figure.thinckness / 2, big_circle);
 
-    draw_thicnless(&data, min_circle, big_circle, &figure, bmih.width, bmih.height, len_min, len_big);
+
+    int len_min = circ_bre(figure.radius - figure.thinckness / 2, min_circle);
+    int len_big = circ_bre(figure.radius + figure.thinckness / 2, big_circle);
+
+    if (figure.fill) {
+        draw_fill_circle(&data,  min_circle, &figure, figure.radius - figure.thinckness / 2, bmih.width, bmih.height, len_min, (Rgb){figure.color_fill_b, figure.color_fill_g, figure.color_fill_g});
+    }
+
+    draw_thicnless(&data, min_circle, big_circle, &figure, bmih.width, bmih.height, len_min, len_big, (Rgb){figure.color_b, figure.color_g, figure.color_r});
+
+
+
+
 
     // Записываем измененное изображение
     if (!write_bmp(figure.finish_filename, &bmfh, &bmih, data)) {
