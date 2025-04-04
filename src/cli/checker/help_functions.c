@@ -19,6 +19,8 @@ bool check_dt_bmp(const char* filename) {
     return !(len >= 4 && strcmp(filename + len - 4, ".bmp") == 0);
 }
 
+
+
 /**
  * @brief Проверят на корректность заполненость цветов для определённого режима.
  *
@@ -49,6 +51,11 @@ bool checker_color(object_t* figure) {
 bool checker_thinckness(object_t* figure) {
     if (figure->thinckness == -1) {
         fprintf(stderr, "Error: Вы не ввели толщину линии!\n");
+        return 1;
+    }
+
+    if (figure->thinckness <= 0) {
+        fprintf(stderr, "Error: Передана неккоректная толщина линии, должна быть больше нуля!\n");
         return 1;
     }
     return 0;
@@ -87,6 +94,7 @@ bool checker_right_down(object_t* figure) {
     }
     return 0;
 }
+
 
 /**
  * @brief Данная функция проверяет на корректность заполненность полей заливки и цвета заливки.

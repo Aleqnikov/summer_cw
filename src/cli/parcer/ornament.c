@@ -33,7 +33,7 @@ bool parce_ornament(int argc, char** argv, object_t* figure) {
     while ((opt = getopt_long(argc, argv, "p:c:t:C:i:o:", long_options, &option_index)) != -1) {
         switch (opt) {
             case 'p': {
-                int count_args = is_correct_count_args(argc, argv, "--pattern");
+                int count_args = is_correct_count_args(argc, argv, "--pattern", figure->start_filename);
                 if (count_args != 0) return count_args;
 
                 if (!strcmp(optarg, "rectangle")) figure->pattern = rectangle;

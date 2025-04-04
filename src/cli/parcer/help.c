@@ -25,7 +25,7 @@ void help_print(void) {
            "        -o --output <file.bmp>                                  Устанавливает название выходного файла.\n"
            "        -i --input <file.bmp>                                   Устанавливает название входного файла.\n"
            "    --ornament [options] \n"
-           "        -p --pattern [rectangle, circle, cemicircle]            Устанавливает режим орнамента.\n"
+           "        -p --pattern [rectangle, circle, cemicircles]            Устанавливает режим орнамента.\n"
            "        -t --thickness <num>                                    Устанавливает тольщину линии.\n"
            "        -C --color <rrr.ggg.bbb>                                Устанавливет цвет линии.\n"
            "        -c --count <num>                                        Устанавливает количество.\n"
