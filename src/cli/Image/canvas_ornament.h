@@ -1,0 +1,12 @@
+#ifndef CANVAS_ONAMENT_H
+#define CANVAS_ONAMENT_H
+
+#include "image_functions.h"
+#include "canvas_circle.h"
+#include "canvas_rect.h"
+
+int rectangle_ornament(Rgb***, BitmapInfoHeader, int, int, Rgb);
+int circle_ornament(Rgb***, BitmapInfoHeader, Rgb);
+int semi_circle_ornament(Rgb***, BitmapInfoHeader, int, int, Rgb);
+
+#endif //CANVAS_ONAMENT_H

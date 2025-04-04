@@ -118,7 +118,6 @@ bool check_ornament(object_t* figure) {
     return 0;
 }
 
-
 /**
  * @brief Проверят корректность полей для --rotate.
  *

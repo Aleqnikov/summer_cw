@@ -86,7 +86,7 @@ bool no_arguments(int argc, char** argv, char* flag_name) {
  * @param name Имя функции, где произошла проверка.
  * @return Единицу, если слишком много аргументов, ноль, если все в норме.
  */
-bool is_correct_count_args(int argc, char** argv, char* name) {
+bool is_correct_count_args(int argc, char** argv, char* name, char* start_filename ) {
     if (!optarg) {
         fprintf(stderr, "Error: Не был передан аргумент для %s!\n", name);
         return 1;
@@ -97,7 +97,9 @@ bool is_correct_count_args(int argc, char** argv, char* name) {
         return 1;
     }
 
-    if ( optind < argc && argv[optind][0] != '-' && !(isalpha(argv[optind][0]) && optind  + 1 == argc)) {
+
+
+    if ( optind < argc && argv[optind][0] != '-' && (optind  + 1 != argc && start_filename == NULL)){
         fprintf(stderr, "Error: вы ввели слишком много аргументов для %s\n", name);
         return 1;
     }
@@ -143,8 +145,8 @@ bool comp_cnt_args(int read_count, int correct_count, char* name_mode) {
  * @param name Название флага.
  * @return Если все правильно, то 0, иначе код ошибки.
  */
-bool check_color(int argc, char** argv, char* name) {
-    int count_args = is_correct_count_args(argc, argv, name);
+bool check_color(int argc, char** argv, char* name, char* filename_inp) {
+    int count_args = is_correct_count_args(argc, argv, name, filename_inp);
     if (count_args != 0) return count_args;
 
     if (is_correct_dots(optarg, 2)) {
@@ -192,9 +194,9 @@ bool check_colors(int count_read, int red, int green, int blue) {
  * @param name Имя проверяемого флага.
  * @return Ноль, если все в порядке, единицу в противном случае.
  */
-bool parce_coords(int argc, char** argv, char* name) {
+bool parce_coords(int argc, char** argv, char* name, char* filename_start) {
     // Проверка на корректность количества аргументов.
-    int count_args = is_correct_count_args(argc, argv, name);
+    int count_args = is_correct_count_args(argc, argv, name, filename_start);
     if (count_args != 0) return count_args;
 
     // Вторая проверка, на количество точек, гарантирует, что передано правильно количество аргументов.
@@ -219,7 +221,7 @@ bool parce_coords(int argc, char** argv, char* name) {
  * @return Возвращает ноль, если все в порядке, в ином случае либо код ошибки, либо единицу.
  */
 bool left_up(object_t* figure, int argc, char** argv) {
-    int result_coords = parce_coords(argc, argv, "left_up");
+    int result_coords = parce_coords(argc, argv, "left_up", figure->start_filename);
     if (result_coords != 0)
         return result_coords;
 
@@ -234,6 +236,7 @@ bool left_up(object_t* figure, int argc, char** argv) {
     return 0;
 }
 
+
 /**
  * @brief Данная функция является реализацией парсера флага --right_down.
  *
@@ -247,7 +250,7 @@ bool left_up(object_t* figure, int argc, char** argv) {
  * @return Возвращает ноль, если все в порядке, в ином случае либо код ошибки, либо единицу.
  */
 bool right_down(object_t* figure, int argc, char** argv) {
-    int result_coords = parce_coords(argc, argv, "right_down");
+    int result_coords = parce_coords(argc, argv, "right_down", figure->start_filename);
     if (result_coords != 0)
         return result_coords;
 
@@ -274,7 +277,7 @@ bool right_down(object_t* figure, int argc, char** argv) {
  * @return Ноль, если все в порядке, в ином случает 1.
  */
 bool thickness(object_t* figure, int argc, char** argv) {
-    int count_args = is_correct_count_args(argc, argv, "--thickness");
+    int count_args = is_correct_count_args(argc, argv, "--thickness", figure->start_filename);
     if (count_args != 0) return count_args;
 
     if (!is_number(optarg)) {
@@ -307,7 +310,7 @@ bool thickness(object_t* figure, int argc, char** argv) {
  * @return Если все в порядке, то ноль, в ином случае код ошибки.
  */
 bool color(object_t* figure, int argc, char** argv) {
-    int first_check = check_color(argc, argv, "--color");
+    int first_check = check_color(argc, argv, "--color", figure->start_filename);
     if (first_check != 0) return first_check;
 
     int red, green, blue;
@@ -332,7 +335,7 @@ bool color(object_t* figure, int argc, char** argv) {
  * @return Если все в порядке, то ноль, в ином случае код ошибки.
  */
 bool fill_color(object_t* figure, int argc, char** argv) {
-    int first_check = check_color(argc, argv, "--fill_color");
+    int first_check = check_color(argc, argv, "--fill_color", figure->start_filename);
     if (first_check != 0) return first_check;
 
     int red, green, blue;
@@ -357,7 +360,7 @@ bool fill_color(object_t* figure, int argc, char** argv) {
  * @return Ноль, если все хорошо, в ином случае единицу.
  */
 bool input_name(object_t* figure, int argc, char** argv) {
-    int check_args = is_correct_count_args(argc, argv, "--input");
+    int check_args = is_correct_count_args(argc, argv, "--input", figure->start_filename);
     if (check_args != 0) return check_args;
 
     figure->start_filename = optarg;
@@ -376,7 +379,7 @@ bool input_name(object_t* figure, int argc, char** argv) {
  * @return Если все нормально ноль, в ином случае код ошибки.
  */
 bool output_name(object_t* figure, int argc, char** argv) {
-    int check_args = is_correct_count_args(argc, argv, "output_name");
+    int check_args = is_correct_count_args(argc, argv, "output_name", figure->start_filename);
     if (check_args != 0) return check_args;
 
     figure->finish_filename = optarg;
@@ -424,7 +427,7 @@ void get_filename(object_t* figure, int argc, char** argv) {
  * @return Ноль в случае удачи, код ошибки в ином случае.
  */
 bool angle(object_t* figure, int argc, char** argv) {
-    if (is_correct_count_args(argc, argv, "--angle"))
+    if (is_correct_count_args(argc, argv, "--angle", figure->start_filename))
         return 1;
 
     if (!is_number(optarg)) {
@@ -458,7 +461,7 @@ bool angle(object_t* figure, int argc, char** argv) {
  * @return Ноль в случае успеха, в ином случае код ошибки.
  */
 bool circle_get(object_t* figure, int argc, char** argv) {
-    if (parce_coords(argc, argv, "--circle"))
+    if (parce_coords(argc, argv, "--circle", figure->start_filename))
         return 1;
 
     int x, y;
@@ -483,7 +486,7 @@ bool circle_get(object_t* figure, int argc, char** argv) {
  * @return В случае успеха ноль, в ином случае код ошибки.
  */
 bool radius(object_t* figure, int argc, char** argv) {
-    if (parce_coords(argc, argv, "--radius"))
+    if (parce_coords(argc, argv, "--radius", figure->start_filename))
         return 1;
 
     if (!is_number(optarg)) {
@@ -516,7 +519,7 @@ bool radius(object_t* figure, int argc, char** argv) {
  * @return В случае успеха ноль, в ином случае код ошибки.
  */
 bool count(object_t* figure, int argc, char** argv) {
-    if (is_correct_count_args(argc, argv, "--count"))
+    if (is_correct_count_args(argc, argv, "--count", figure->start_filename))
         return 1;
 
     if (!is_number(optarg)) {

@@ -6,6 +6,7 @@
 #include "structures.h"
 #include "parcer/parcer.h"
 #include "checker/base_checker.h"
+#include "Image/canvas.h"
 
 
 /**
@@ -41,30 +42,12 @@ int main(int argc, char* argv[]){
     object_t* figure = malloc(sizeof(object_t));
     constuctor(figure);
 
-
     if (base_parser(figure, argc, argv)) return 41;
 
     if (base_checker(figure)) return 42;
 
-    printf("mod %d\n", figure->mod);
-    printf("pattern %d\n", figure->pattern);
-    printf(" x_lu %d\n", figure->x_left_up);
-    printf("y_lu %d\n", figure->y_left_up);
-    printf("x_rd %d\n", figure->x_right_down);
-    printf("y_rd %d\n", figure->y_right_down);
-    printf("thincless %d\n", figure->thinckness);
-    printf("color %d  %d  %d\n", figure->color_r, figure->color_g, figure->color_b);
-    printf("fill %d\n", figure->fill);
-    printf("color_fill %d  %d  %d\n", figure->color_fill_r, figure->color_fill_g, figure->color_fill_b);
-    printf("count %d\n", figure->count);
-    printf("angle  %d\n", figure->angle);
-    printf("x_c, y_c %d  %d\n", figure->x_center, figure->y_center);
-    printf("rad %d\n", figure->radius);
+   canvas_logic(*figure);
 
-
-    puts(figure->start_filename);
-
-    puts(figure->finish_filename);
     free(figure);
 
     return 0;

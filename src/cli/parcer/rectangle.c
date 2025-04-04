@@ -5,6 +5,7 @@
 
 #include "rectangle.h"
 
+
 /**
  * @brief Данная функция является парсером --rect.
  *

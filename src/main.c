@@ -165,7 +165,7 @@ int get_padding(unsigned int width){
  * @brief Данная функция проверяет, выходит ли за пределы изображения координаты.
  */
 bool check_coord(int y, int x, int height, int weight){
-    if((x >= 0 && x <= weight) && (y >= 0 && y <= height))
+    if((x >= 0 && x < weight) && (y >= 0 && y < height))
         return 1;
     return 0;
 }
@@ -277,70 +277,43 @@ int write_bmp(const char* filename, const BitmapFileHeader* bmfh, const BitmapIn
 }
 
 
-
-
-bool check_draw_thincless(int y, int x, int thincless, int x_min, int x_max, int y_min, int y_max){
-    if(y >= y_min - thincless && y <= y_max + thincless && x >= x_min - thincless && x < x_min)
-        return 1;
-    
-    if(y >= y_min - thincless && y <= y_max + thincless && x > x_max  && x <= x_max + thincless)
-        return 1;
-
-    if(x >= x_min - thincless && x <= x_max + thincless && y >= y_min - thincless && y < y_min)
-        return 1;
-    
-    if(x >= x_min - thincless && x <= x_max + thincless && y > y_max  && y <= y_max + thincless)
-        return 1;
-
-    return 0;
-}
-
-int draw_rectangle(object_t info_m){
-    BitmapFileHeader bmfh;
-    BitmapInfoHeader bmih;
-    Rgb **data = NULL;
-
-    if(!read_bmp(info_m.start_filename, &bmfh, &bmih, &data)){
-        fprintf(stderr, "Error: Не удалось считать данные из файла.\n");
-        return 0;
-    }
-
-    Rgb color = {info_m.color_b, info_m.color_g, info_m.color_r};
-    Rgb color_thinckless = {info_m.color_fill_b, info_m.color_fill_g, info_m.color_fill_r};
-
-    for(int y = info_m.y_right_down - info_m.thinckness; y <= info_m.y_left_up + info_m.thinckness; y++){
-        for(int x = info_m.x_left_up - info_m.thinckness; x <= info_m.x_right_down + info_m.thinckness; x++){
-
-            if(check_draw_thincless(y, x, info_m.thinckness, info_m.x_left_up, info_m.x_right_down, info_m.y_right_down, info_m.y_left_up) && check_coord(y, x, bmih.height, bmih.width))
-                    data[y][x] = color_thinckless;
-
-            if(info_m.fill){
-                if(x <= info_m.x_right_down && x >= info_m.x_left_up && y >= info_m.y_right_down && y <= info_m.y_left_up && check_coord(y, x, bmih.height, bmih.width))
-                    data[y][x] = color;
+int draw_rectangle(Rgb*** data, BitmapInfoHeader bmih, bool fill, Rgb color_fill, Rgb color, int thickness, int x_lu, int x_rd, int y_lu, int y_rd) {
+    if (fill) {
+        for(int y = y_rd; y <= y_lu ; y++) {
+            for(int x = x_lu; x <= x_rd ; x++) {
+                if(check_coord(y, x, bmih.height, bmih.width)) (*data)[y][x] = color_fill;
             }
-
         }
     }
 
-    // Записываем измененное изображение
-    if (!write_bmp(info_m.finish_filename, &bmfh, &bmih, data)) {
-        return 1;
+    // Рисуем обводку Сначала верхние полосы, затем боковые.
+    for(int y = y_rd; y <= y_lu ; y++) {
+        for (int upper = - (thickness) / 2; upper <= (thickness) / 2; upper++) {
+            for (int side = - (thickness) / 2; side <= (thickness) / 2; side++) {
+                if(check_coord(y + upper, x_lu + side, bmih.height, bmih.width)) (*data)[y + upper][x_lu + side] = color;
+                if(check_coord(y + upper, x_rd + side, bmih.height, bmih.width)) (*data)[y + upper][x_rd + side] = color;
+            }
+        }
     }
 
-    // Освобождаем память
-    for (int i = 0; i < (bmih.height); i++) {
-        free(data[i]);
+
+    for(int x = x_lu; x <= x_rd ; x++) {
+        for (int upper = - (thickness) / 2; upper <= (thickness) / 2; upper++) {
+            for (int side = - (thickness) / 2; side <= (thickness) / 2; side++) {
+                if(check_coord(y_lu + upper, x + side, bmih.height, bmih.width)) (*data)[y_lu + upper][x + side] = color;
+                if(check_coord(y_rd + upper, x + side, bmih.height, bmih.width)) (*data)[y_rd + upper][x + side] = color;
+            }
+        }
     }
-    free(data);
+
 
     return 0;
+
 }
-
-
 
 Rgb** copy_array(Rgb** data, int height, int width){
     Rgb** new_array = NULL;
-    new_array = (Rgb** )(malloc(sizeof(Rgb* )* (height)));
+    new_array = (Rgb** )(malloc(sizeof(Rgb* ) * (height)));
 
     for (int i = 0; i < (height); i++) {
         (new_array)[i] = (Rgb *)malloc(width * sizeof(Rgb));
@@ -383,88 +356,35 @@ int custom_sin(int angle) {
  * При помощи преобразований плоскости, мы меняем координаты точек, и затем ставим её на новое место.
  * Т.е x = xcosa + ysina, y = -xsina + ycosa
  */
-int rotate_area(object_t figure){
-    BitmapFileHeader bmfh;
-    BitmapInfoHeader bmih;
-    Rgb **data = NULL;
+Rgb** rotate_area(Rgb*** data, BitmapInfoHeader bmih, int angle, int x_lu, int x_rd, int y_lu, int y_rd){
 
-    if(!read_bmp(figure.start_filename, &bmfh, &bmih, &data)){
-        fprintf(stderr, "Error: Не удалось считать данные из файла.\n");
-        return 0;
-    }
-
-    Rgb** new_data = copy_array(data, bmih.height, bmih.width);
-    int x_center = (figure.x_left_up + figure.x_right_down)/2;
-    int y_center = (figure.y_left_up + figure.y_right_down)/2;
+    Rgb** new_data = copy_array(*data, bmih.height, bmih.width);
+    int x_center = (x_lu + x_rd)/2;
+    int y_center = (y_lu + y_rd)/2;
 
 
-    for (int y = figure.y_right_down; y <= figure.y_left_up; y++) {
-        for (int x = figure.x_left_up; x <= figure.x_right_down; x++) {
+    for (int y = y_rd; y <= y_lu; y++) {
+        for (int x = x_lu; x <= x_rd; x++) {
             // Смещаем пиксель относительно центра
             int x_shifted = x - x_center;
             int y_shifted = y - y_center;
 
             // Поворот
-            int x_new = (int)((x_shifted * custom_cos(figure.angle) + y_shifted * custom_sin(figure.angle)) + x_center);
-            int y_new = (int)((-x_shifted *custom_sin(figure.angle)) + y_shifted * custom_cos(figure.angle) + y_center);
+            int x_new = (int)((x_shifted * custom_cos(angle) + y_shifted * custom_sin(angle)) + x_center);
+            int y_new = (int)((-x_shifted *custom_sin(angle)) + y_shifted * custom_cos(angle) + y_center);
 
-            if(check_coord(x_new, y_new, bmih.height, bmih.width)) {
-                new_data[y_new][x_new] = data[y][x];
-            }
-
+            if(check_coord(x_new, y_new, bmih.height, bmih.width))  new_data[y_new][x_new] = (*data)[y][x];
 
         }
-    }
-
-
-    // Записываем измененное изображение
-    if (!write_bmp(figure.finish_filename, &bmfh, &bmih, new_data)){
-        return 1;
     }
 
     // Освобождаем память
-    for (int i = 0; i < (bmih.height); i++) {
-        free(new_data[i]);
-        free(data[i]);
-    }
-    free(data);
-    free(new_data);
+    for (int i = 0; i < (bmih.height); i++)
+        free((*data)[i]);
+    free(*data);
 
-    return 0;
+    return new_data;
 }
-
-
-// Draw circle brezenchem method
-int get_circle_coords(int r, point_t* circle) {
-
-    int x = 0;
-    int y = r;
-    int delta = 1 - 2 * r;
-    int error = 0;
-
-    int index = 0;
-    while(y >= 0) {
-        circle[index].x = x; circle[index].y = y;
-        index++;
-        error = 2 * (delta + y) - 1;
-        if(delta < 0 && error <= 0) {
-            ++x;
-            delta += 2 * x + 1;
-            continue;
-        }
-        if(delta >= 0 && error > 0) {
-            --y;
-            delta += 1 - 2 * y;
-            continue;
-        }
-        ++x;
-        delta += 2 * (x - y);
-        --y;
-    }
-
-    return index;
-}
-
 
 // Function implementing Bresenham's circle algorithm for the entire first quarter of the circle
 int circ_bre(int rad, point_t* circle){
@@ -506,13 +426,9 @@ int circ_bre(int rad, point_t* circle){
     return index;  // Return the number of points stored
 }
 
-
-
-
-
-int get_y_limit_up(point_t* circle, int len, int x_val, int base_value, int x_c) {
+int get_y_limit_up(point_t* circle, int len, int x_val, int x_c) {
     int y = INT_MIN;
-    for (int i = 0; i <= len; i++) {
+    for (int i = 0; i < len; i++) {
         if ((circle[i]).x + x_c == x_val) {
             y = y >(circle[i]).y ? y : (circle[i]).y;
         }
@@ -524,8 +440,7 @@ int get_y_limit_up(point_t* circle, int len, int x_val, int base_value, int x_c)
     return y;
 }
 
-
-int get_y_limit_down(point_t* circle, int len, int x_val, int base_value, int x_c) {
+int get_y_limit_down(point_t* circle, int len, int x_val, int x_c) {
     int y = INT_MAX;
     for (int i = 0; i < len; i++) {
 
@@ -540,25 +455,27 @@ int get_y_limit_down(point_t* circle, int len, int x_val, int base_value, int x_
 }
 
 
-int draw_thicnless(Rgb*** data, point_t* circle_m, point_t* circle_b, object_t* figure, int w, int h, int len_min, int len_big, Rgb color) {
-    int x_min = figure->x_center; int x_max = figure->radius + figure->x_center + figure->thinckness / 2;
-    int y_min = figure->y_center; int y_max = figure->radius + figure->y_center + figure->thinckness / 2;
+int draw_thicnless(Rgb*** data, point_t* circle_m, point_t* circle_b, BitmapInfoHeader bmih, int len_min, int len_big, Rgb color, int x_c, int y_c, int radius, int thickness) {
+    int x_min = x_c; int x_max = radius + x_c + thickness / 2;
+    int y_min = y_c; int y_max = radius + y_c + thickness / 2;
 
 
     for (int j = x_min; j <= x_max; j++) {
 
-        int y_up_lim = get_y_limit_up(circle_b, len_big, j, y_min, figure->x_center);
-        int y_down_lim = get_y_limit_down(circle_m, len_min, j, y_min, figure->x_center);
+        int y_up_lim = get_y_limit_up(circle_b, len_big, j, x_c);
+        int y_down_lim = get_y_limit_down(circle_m, len_min, j, x_c);
 
         for (int i = y_down_lim; i <= y_up_lim; i++) {
-            if (check_coord(y_min + i, j, h, w))
+            if (check_coord(y_min + i, j, bmih.height, bmih.width))
                 (*data)[y_min + i][j] = color;
-            if (check_coord(y_min - i, j, h, w))
+            if (check_coord(y_min - i, j, bmih.height, bmih.width))
                 (*data)[y_min - i][j] = color;
-            if (check_coord(y_min + i, 2*x_min - j, h, w))
+            if (check_coord(y_min + i, 2*x_min - j, bmih.height, bmih.width))
                 (*data)[y_min + i][2*x_min - j] = color;
-            if (check_coord(y_min - i, 2* x_min - j, h, w))
+            if (check_coord(y_min - i, 2* x_min - j, bmih.height, bmih.width))
                 (*data)[y_min - i][2* x_min - j] = color;
+
+
         }
 
 
@@ -569,24 +486,23 @@ int draw_thicnless(Rgb*** data, point_t* circle_m, point_t* circle_b, object_t* 
 }
 
 
-int draw_fill_circle(Rgb*** data, point_t* circle_m, object_t* figure, int rad,  int w, int h, int len_min, Rgb color) {
-    int x_min = figure->x_center; int x_max = rad + figure->x_center ;
-    int y_min = figure->y_center; int y_max = rad + figure->y_center;
+int draw_fill_circle(Rgb*** data, point_t* circle_m, BitmapInfoHeader bmih, int rad, int len_min, Rgb color, int x_c, int y_c) {
+    int x_min = x_c; int x_max = rad + x_c ;
+    int y_min = y_c; int y_max = rad + y_c;
 
 
     for (int j = x_min; j <= x_max; j++) {
 
-        int y_up_lim = get_y_limit_up(circle_m, len_min, j, y_min, figure->x_center);
-
+        int y_up_lim = get_y_limit_up(circle_m, len_min, j, x_c);
 
         for (int i = 0; i <= y_up_lim; i++) {
-            if (check_coord(y_min + i, j, h, w))
+            if (check_coord(y_min + i, j, bmih.height, bmih.width))
                 (*data)[y_min + i][j] = color;
-            if (check_coord(y_min - i, j, h, w))
+            if (check_coord(y_min - i, j, bmih.height, bmih.width))
                 (*data)[y_min - i][j] = color;
-            if (check_coord(y_min + i, 2*x_min - j, h, w))
+            if (check_coord(y_min + i, 2*x_min - j, bmih.height, bmih.width))
                 (*data)[y_min + i][2*x_min - j] = color;
-            if (check_coord(y_min - i, 2* x_min - j, h, w))
+            if (check_coord(y_min - i, 2* x_min - j, bmih.height, bmih.width))
                 (*data)[y_min - i][2* x_min - j] = color;
         }
     }
@@ -594,7 +510,80 @@ int draw_fill_circle(Rgb*** data, point_t* circle_m, object_t* figure, int rad, 
     return 1;
 }
 
-int draw_circle3(object_t figure) {
+int draw_circle(Rgb*** data, BitmapInfoHeader bmih, Rgb color, Rgb color_fill, int thickness, int radius, int fill, int x_c, int y_c) {
+    thickness = (thickness  % 2 == 0) ? thickness + 1 : thickness;
+
+    point_t* min_circle = malloc(sizeof(point_t) * (radius - thickness / 2 )*8);
+    point_t* big_circle = malloc(sizeof(point_t) * (radius + thickness / 2 )*8);
+
+    int len_min = circ_bre(radius - thickness / 2, min_circle);
+    int len_big = circ_bre(radius + thickness / 2, big_circle) ;
+
+
+    if (fill) {
+        draw_fill_circle(data,  min_circle, bmih, radius - thickness/ 2, len_min, color_fill, x_c, y_c);
+    }
+
+    draw_thicnless(data, min_circle, big_circle, bmih, len_min, len_big, color, x_c, y_c, radius, thickness);
+
+    free(min_circle);
+    free(big_circle);
+
+    return 0;
+
+}
+
+int rectangle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count, int thickness, Rgb color) {
+    thickness = (thickness  % 2 == 0) ? thickness + 1 : thickness;
+
+    int diff = thickness/2;
+    for (int i = 0; i < count; i++) {
+        draw_rectangle(data, bmih, false, color, color, thickness, diff, bmih.width - diff, bmih.height - diff, diff);
+        diff += 2*thickness;
+    }
+    return 1;
+}
+
+int circle_ornament(Rgb*** data, BitmapInfoHeader bmih, Rgb color) {
+    int x_c = (bmih.width + 1) / 2;
+    int y_c = (bmih.height + 1) / 2;
+    int min_radius = x_c < y_c ? x_c : y_c;
+    int max_radius =  x_c + y_c;
+
+    int thickness = 2*(max_radius - min_radius);
+
+    draw_circle(data, bmih, color, color, thickness, max_radius, false, x_c, y_c);
+
+}
+
+int semi_circle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count, int thickness, Rgb color) {
+    int width_radius = bmih.width % (count * 2) == 0?  bmih.width / (count * 2):  bmih.width / (count * 2) + 1;
+    int height_radius = bmih.height % (count * 2) == 0?  bmih.height / (count * 2):  bmih.height / (count * 2) + 1;
+
+    int diff_width = width_radius;
+    int diff_height = bmih.height - height_radius - 1;
+
+    for (int i = 0; i < count; i++) {
+        draw_circle(data, bmih, color, color, thickness, width_radius, false, diff_width, 0);
+        draw_circle(data, bmih, color, color, thickness, width_radius, false, diff_width, bmih.height);
+
+
+        draw_circle(data, bmih, color, color, thickness, height_radius, false, 0, diff_height);
+        draw_circle(data, bmih, color, color, thickness, height_radius, false, bmih.width, diff_height);
+
+
+
+
+
+
+        diff_width += 2*width_radius;
+        diff_height -= 2*height_radius;
+    }
+    return 0;
+}
+
+
+int canvas_logic(object_t figure) {
     BitmapFileHeader bmfh;
     BitmapInfoHeader bmih;
     Rgb **data = NULL;
@@ -604,29 +593,38 @@ int draw_circle3(object_t figure) {
         return 0;
     }
 
-    Rgb color = {figure.color_b, figure.color_g, figure.color_r};
-    Rgb color_thinckless = {figure.color_fill_b, figure.color_fill_g, figure.color_fill_r};
+    Rgb color_fill = (Rgb){figure.color_fill_b, figure.color_fill_g, figure.color_fill_g};
+    Rgb color =  (Rgb){figure.color_b, figure.color_g, figure.color_r};
 
-    figure.thinckness = (figure.thinckness  % 2 == 0) ? figure.thinckness + 1 : figure.thinckness;
+    switch (figure.mod) {
+        case rect:
+            draw_rectangle(&data, bmih, figure.fill, color_fill, color, figure.thinckness, figure.x_left_up, figure.x_right_down, figure.y_left_up, figure.y_right_down);
+            break;
+        case ornament:
+            switch (figure.pattern) {
+                case circle:
+                    circle_ornament(&data, bmih, color);
+                    break;
+                case rectangle:
+                    rectangle_ornament(&data, bmih, figure.count, figure.thinckness, color);
+                    break;
+                case semicircle:
+                    semi_circle_ornament(&data, bmih, figure.count, figure.thinckness, color);
+                    break;
+            }
 
-
-
-    point_t min_circle[(figure.radius - figure.thinckness / 2 )*(figure.radius - figure.thinckness / 2)];
-    point_t big_circle[(figure.radius + figure.thinckness / 2 )*(figure.radius + figure.thinckness / 2)];
-
-
-
-    int len_min = circ_bre(figure.radius - figure.thinckness / 2, min_circle);
-    int len_big = circ_bre(figure.radius + figure.thinckness / 2, big_circle);
-
-    if (figure.fill) {
-        draw_fill_circle(&data,  min_circle, &figure, figure.radius - figure.thinckness / 2, bmih.width, bmih.height, len_min, (Rgb){figure.color_fill_b, figure.color_fill_g, figure.color_fill_g});
+            break;
+        case rotate:
+             data = rotate_area(&data, bmih, figure.angle, figure.x_left_up, figure.x_right_down, figure.y_left_up, figure.y_right_down);
+            break;
+        case circ:
+            draw_circle(&data, bmih, color, color_fill, figure.thinckness, figure.radius, figure.fill, figure.x_center, figure.y_center);
+            break;
+        case info:
+            print_file_header(bmfh);
+            print_info_header(bmih);
+            break;
     }
-
-    draw_thicnless(&data, min_circle, big_circle, &figure, bmih.width, bmih.height, len_min, len_big, (Rgb){figure.color_b, figure.color_g, figure.color_r});
-
-
-
 
 
     // Записываем измененное изображение
@@ -641,119 +639,7 @@ int draw_circle3(object_t figure) {
     free(data);
 
     return 0;
-
 }
-
-int draw_cicle_2(object_t figure) {
-    BitmapFileHeader bmfh;
-    BitmapInfoHeader bmih;
-    Rgb **data = NULL;
-
-    if(!read_bmp(figure.start_filename, &bmfh, &bmih, &data)){
-        fprintf(stderr, "Error: Не удалось считать данные из файла.\n");
-        return 0;
-    }
-
-    Rgb color = {figure.color_b, figure.color_g, figure.color_r};
-    Rgb color_thinckless = {figure.color_fill_b, figure.color_fill_g, figure.color_fill_r};
-
-    // Применяем алгоритм Брезенхэма
-
-
-        int x = 0;
-        int y = figure.radius;
-        int delta = 1 - 2 * figure.radius;
-        int error = 0;
-
-        int y_c = figure.y_center;
-        int x_c = figure.x_center;
-
-        while(y >= 0) {
-            data[y_c + y][x_c + x] = color;
-            data[y_c - y][x_c + x] = color;
-            data[y_c + y][x_c - x] = color;
-            data[y_c - y][x_c - x] = color;
-            error = 2 * (delta + y) - 1;
-            if(delta < 0 && error <= 0) {
-                ++x;
-                delta += 2 * x + 1;
-                continue;
-            }
-            if(delta >= 0 && error > 0) {
-                --y;
-                delta += 1 - 2 * y;
-                continue;
-            }
-            ++x;
-            delta += 2 * (x - y);
-            --y;
-        }
-
-
-
-    // Записываем измененное изображение
-    if (!write_bmp(figure.finish_filename, &bmfh, &bmih, data)) {
-        return 1;
-    }
-
-    // Освобождаем память
-    for (int i = 0; i < (bmih.height); i++) {
-        free(data[i]);
-    }
-    free(data);
-
-    return 0;
-}
-
-int draw_circle(object_t info_m){
-
-
-    BitmapFileHeader bmfh;
-    BitmapInfoHeader bmih;
-    Rgb **data = NULL;
-
-    if(!read_bmp(info_m.start_filename, &bmfh, &bmih, &data)){
-        fprintf(stderr, "Error: Не удалось считать данные из файла.\n");
-        return 0;
-    }
-
-    Rgb color = {info_m.color_b, info_m.color_g, info_m.color_r};
-    Rgb color_thinckless = {info_m.color_fill_b, info_m.color_fill_g, info_m.color_fill_r};
-
-    for(int y = info_m.y_center - info_m.radius - info_m.thinckness + 1; y < info_m.y_center + info_m.radius + info_m.thinckness; y++){
-        for(int x = info_m.x_center - info_m.radius - info_m.thinckness + 1; x < info_m.x_center + info_m.radius + info_m.thinckness; x++){
-
-            int radius_pre =(x - info_m.x_center)*(x - info_m.x_center) + (y - info_m.y_center)*(y - info_m.y_center);
-            int min_rad =  info_m.radius*info_m.radius;
-            int max_ras = (info_m.radius + info_m.thinckness)*(info_m.radius + info_m.thinckness);
-
-
-            if(radius_pre <= max_ras && radius_pre >= min_rad && check_coord(y, x, bmih.height, bmih.width))
-                data[y][x] = color_thinckless;
-                
-
-            if(info_m.fill){
-                if(radius_pre < min_rad && check_coord(y, x, bmih.height, bmih.width))
-                    data[y][x] = color;
-            }   
-
-        }
-    }
-
-    // Записываем измененное изображение
-    if (!write_bmp(info_m.finish_filename, &bmfh, &bmih, data)) {
-        return 1;
-    }
-
-    // Освобождаем память
-    for (int i = 0; i < (bmih.height); i++) {
-        free(data[i]);
-    }
-    free(data);
-
-    return 0;
-}
-
 
 /*
 ___________________________CLI_TOOOLS_________________________________________________________
@@ -819,7 +705,7 @@ void help_print(void) {
            "        -o --output <file.bmp>                                  Устанавливает название выходного файла.\n"
            "        -i --input <file.bmp>                                   Устанавливает название входного файла.\n"
            "    --ornament [options] \n"
-           "        -p --pattern [rectangle, circle, cemicircle]            Устанавливает режим орнамента.\n"
+           "        -p --pattern [rectangle, circle, cemicircles]            Устанавливает режим орнамента.\n"
            "        -t --thickness <num>                                    Устанавливает тольщину линии.\n"
            "        -C --color <rrr.ggg.bbb>                                Устанавливет цвет линии.\n"
            "        -c --count <num>                                        Устанавливает количество.\n"
@@ -2122,7 +2008,8 @@ int main(int argc, char* argv[]){
     puts(figure->finish_filename);
 
 
-    draw_circle3(*figure);
+    canvas_logic(*figure);
+
     
     free(figure);
 

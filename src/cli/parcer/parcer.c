@@ -10,6 +10,7 @@ void print_help() {
     printf("Course work for option 5.1, created by Ivan Aleinikov\n");
 }
 
+
 /**
  * @brief Данная функция является логической функции парсера, которая проверяет все команды
  * и передаёт их в зависимые функции.

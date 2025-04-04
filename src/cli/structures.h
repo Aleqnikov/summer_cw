@@ -77,6 +77,48 @@ typedef struct Object {
     int radius;                                         /** @brief Радиус окружности*/
 } object_t ;
 
+#pragma pack(push, 1)
+/**
+* @breif Набор структур для чтения BMP
+*/
+typedef struct {
+    unsigned short signature;
+    unsigned int filesize;
+    unsigned short reserved1;
+    unsigned short reserved2;
+    unsigned int pixelArrOffset;
+} BitmapFileHeader;
+
+typedef struct {
+    unsigned int headerSize;
+    unsigned int width;
+    unsigned int height;
+    unsigned short planes;
+    unsigned short bitsPerPixel;
+    unsigned int compression;
+    unsigned int imageSize;
+    unsigned int xPixelsPerMeter;
+    unsigned int yPixelsPerMeter;
+    unsigned int colorsInColorTable;
+    unsigned int importantColorCount;
+} BitmapInfoHeader;
+
+typedef struct {
+    unsigned char b;
+    unsigned char g;
+    unsigned char r;
+} Rgb;
+
+#pragma pack(pop)
+
+/**
+ * @brief Используется при получении координат растровых фигут.
+ */
+typedef struct {
+    int x, y;
+} point_t;
+
+
 /**
  * @brief Функция конструктор заполняет структуру базовыми значениями, предполагается, что такие значения не могут
  * получится в случае парсера, поэтому можно будет проверить, ввел ли пользователь тому или иному полю значение.
