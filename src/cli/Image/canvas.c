@@ -1,7 +1,7 @@
 #include "canvas.h"
 
 
-int canvas_logic(object_t figure) {
+bool canvas_logic(object_t figure) {
     BitmapFileHeader bmfh;
     BitmapInfoHeader bmih;
     Rgb **data = NULL;
@@ -16,32 +16,34 @@ int canvas_logic(object_t figure) {
 
     switch (figure.mod) {
         case rect:
-            draw_rectangle(&data, bmih, figure.fill, color_fill, color, figure.thinckness, figure.x_left_up, figure.x_right_down, figure.y_left_up, figure.y_right_down);
-        break;
+            draw_rectangle(&data, bmih, figure, color_fill, color);
+            break;
         case ornament:
             switch (figure.pattern) {
                 case circle:
                     circle_ornament(&data, bmih, color);
-                break;
+                    break;
                 case rectangle:
-                    rectangle_ornament(&data, bmih, figure.count, figure.thinckness, color);
-                break;
+                    rectangle_ornament(&data, bmih, figure, color);
+                    break;
                 case semicircle:
                     semi_circle_ornament(&data, bmih, figure.count, figure.thinckness, color);
-                break;
+                    break;
             }
 
-        break;
+            break;
         case rotate:
-            data = rotate_area(&data, bmih, figure.angle, figure.x_left_up, figure.x_right_down, figure.y_left_up, figure.y_right_down);
-        break;
+            data = rotate_area(&data, bmih, figure);
+            if (data == NULL)
+                return 1;
+            break;
         case circ:
-            draw_circle(&data, bmih, color, color_fill, figure.thinckness, figure.radius, figure.fill, figure.x_center, figure.y_center);
-        break;
+            draw_circle(&data, bmih, color, color_fill, figure);
+            break;
         case info:
             print_file_header(bmfh);
-        print_info_header(bmih);
-        break;
+            print_info_header(bmih);
+            break;
     }
 
 

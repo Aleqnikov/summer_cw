@@ -38,6 +38,7 @@ typedef enum Mode {rect, ornament, rotate, circ, info, help, None} mode;
  */
 enum count_arguments {one_read = 1, two_read = 2, three_read = 3};
 
+typedef enum  {up = 1, down = -1} limit_circle_mod;
 
 
 #pragma pack(push, 1)
@@ -119,6 +120,14 @@ typedef struct Object {
 typedef struct {
     int x, y;
 } point_t;
+
+typedef struct {
+    int x_center, y_center;
+    int radius;
+    int thickness;
+    int len_array;
+    point_t* points;
+} circle_t;
 
 
 
@@ -241,8 +250,6 @@ int read_bmp(const char* filename, BitmapFileHeader* file_header, BitmapInfoHead
 
 }
 
-
-
 /**
  * @brief Данная функция записывает в файл.
  */
@@ -277,43 +284,40 @@ int write_bmp(const char* filename, const BitmapFileHeader* bmfh, const BitmapIn
 }
 
 
-int draw_rectangle(Rgb*** data, BitmapInfoHeader bmih, bool fill, Rgb color_fill, Rgb color, int thickness, int x_lu, int x_rd, int y_lu, int y_rd) {
-    if (fill) {
+void draw_rectangle(Rgb*** data, BitmapInfoHeader bmih, object_t figure, Rgb color_fill, Rgb color) {
+
+    int thickness = figure.thinckness;
+    int x_lu = figure.x_left_up; int x_rd = figure.x_right_down;
+    int y_lu = figure.y_left_up; int y_rd = figure.y_right_down;
+
+    if (figure.fill) {
         for(int y = y_rd; y <= y_lu ; y++) {
-            for(int x = x_lu; x <= x_rd ; x++) {
+            for(int x = x_lu; x <= x_rd ; x++)
                 if(check_coord(y, x, bmih.height, bmih.width)) (*data)[y][x] = color_fill;
-            }
         }
     }
 
-    // Рисуем обводку Сначала верхние полосы, затем боковые.
-    for(int y = y_rd; y <= y_lu ; y++) {
-        for (int upper = - (thickness) / 2; upper <= (thickness) / 2; upper++) {
-            for (int side = - (thickness) / 2; side <= (thickness) / 2; side++) {
+    for (int upper = - (thickness) / 2; upper <= (thickness) / 2; upper++) {
+        for (int side = - (thickness) / 2; side <= (thickness) / 2; side++) {
+            for(int y = y_rd; y <= y_lu ; y++) {
                 if(check_coord(y + upper, x_lu + side, bmih.height, bmih.width)) (*data)[y + upper][x_lu + side] = color;
                 if(check_coord(y + upper, x_rd + side, bmih.height, bmih.width)) (*data)[y + upper][x_rd + side] = color;
             }
-        }
-    }
 
-
-    for(int x = x_lu; x <= x_rd ; x++) {
-        for (int upper = - (thickness) / 2; upper <= (thickness) / 2; upper++) {
-            for (int side = - (thickness) / 2; side <= (thickness) / 2; side++) {
+            for(int x = x_lu; x <= x_rd ; x++) {
                 if(check_coord(y_lu + upper, x + side, bmih.height, bmih.width)) (*data)[y_lu + upper][x + side] = color;
                 if(check_coord(y_rd + upper, x + side, bmih.height, bmih.width)) (*data)[y_rd + upper][x + side] = color;
             }
         }
     }
-
-
-    return 0;
-
 }
 
 Rgb** copy_array(Rgb** data, int height, int width){
     Rgb** new_array = NULL;
     new_array = (Rgb** )(malloc(sizeof(Rgb* ) * (height)));
+
+    if (new_array == NULL)
+        return NULL;
 
     for (int i = 0; i < (height); i++) {
         (new_array)[i] = (Rgb *)malloc(width * sizeof(Rgb));
@@ -356,29 +360,29 @@ int custom_sin(int angle) {
  * При помощи преобразований плоскости, мы меняем координаты точек, и затем ставим её на новое место.
  * Т.е x = xcosa + ysina, y = -xsina + ycosa
  */
-Rgb** rotate_area(Rgb*** data, BitmapInfoHeader bmih, int angle, int x_lu, int x_rd, int y_lu, int y_rd){
+Rgb** rotate_area(Rgb*** data, BitmapInfoHeader bmih, object_t figure){
 
     Rgb** new_data = copy_array(*data, bmih.height, bmih.width);
-    int x_center = (x_lu + x_rd)/2;
-    int y_center = (y_lu + y_rd)/2;
+    if (new_data == NULL)
+        return NULL;
 
+    int x_center = (figure.x_left_up + figure.x_right_down)/2;
+    int y_center = (figure.y_left_up + figure.y_right_down)/2;
 
-    for (int y = y_rd; y <= y_lu; y++) {
-        for (int x = x_lu; x <= x_rd; x++) {
-            // Смещаем пиксель относительно центра
+    for (int y = figure.y_right_down; y <= figure.y_left_up; y++) {
+        for (int x = figure.x_left_up; x <= figure.x_right_down; x++) {
+
             int x_shifted = x - x_center;
             int y_shifted = y - y_center;
 
-            // Поворот
-            int x_new = (int)((x_shifted * custom_cos(angle) + y_shifted * custom_sin(angle)) + x_center);
-            int y_new = (int)((-x_shifted *custom_sin(angle)) + y_shifted * custom_cos(angle) + y_center);
+            int x_new = (int)((x_shifted * custom_cos(figure.angle) + y_shifted * custom_sin(figure.angle)) + x_center);
+            int y_new = (int)((-x_shifted *custom_sin(figure.angle)) + y_shifted * custom_cos(figure.angle) + y_center);
 
             if(check_coord(x_new, y_new, bmih.height, bmih.width))  new_data[y_new][x_new] = (*data)[y][x];
 
         }
     }
 
-    // Освобождаем память
     for (int i = 0; i < (bmih.height); i++)
         free((*data)[i]);
     free(*data);
@@ -390,80 +394,61 @@ Rgb** rotate_area(Rgb*** data, BitmapInfoHeader bmih, int angle, int x_lu, int x
 int circ_bre(int rad, point_t* circle){
     int x = 0;
     int y = rad;
-    int d = 3 - 2 * rad;  // Initial decision parameter
+    int d = 3 - 2 * rad;
 
     int index = 0;
 
-    // Generate points for the first quarter (x >= 0, y >= 0, x² + y² ≈ r²)
     while (x <= y)
     {
-        // Store the point in the first octant (x, y)
         circle[index].x = x;
         circle[index].y = y;
+
         index++;
 
-        // Store the symmetric point in the second octant (y, x) — тоже в первой четверти!
-        if (x != y)  // Чтобы не дублировать точку при x == y (на диагонали)
-        {
+        if (x != y){
             circle[index].x = y;
             circle[index].y = x;
             index++;
         }
 
-        // Update decision parameter and coordinates
-        if (d < 0)
-        {
+        if (d < 0) {
             d = d + 4 * x + 6;
         }
-        else
-        {
+        else {
             d = d + 4 * (x - y) + 10;
             y--;
         }
         x++;
     }
 
-    return index;  // Return the number of points stored
+    return index;
 }
 
-int get_y_limit_up(point_t* circle, int len, int x_val, int x_c) {
-    int y = INT_MIN;
-    for (int i = 0; i < len; i++) {
-        if ((circle[i]).x + x_c == x_val) {
-            y = y >(circle[i]).y ? y : (circle[i]).y;
+int get_y_limit(circle_t cirlce, int x_val, limit_circle_mod mode){
+    int y = (mode == down? INT_MAX: INT_MIN);
+
+    for (int i = 0; i < cirlce.len_array; i++) {
+
+        if ((cirlce.points[i]).x + cirlce.x_center == x_val) {
+            if (mode == down)
+                y = y < (cirlce.points[i]  ).y ? y : (cirlce.points[i]).y;
+            else
+                y = y > (cirlce.points[i]  ).y ? y : (cirlce.points[i]).y;
         }
     }
 
-    if (y == INT_MIN)
-        return 0;
-
-    return y;
-}
-
-int get_y_limit_down(point_t* circle, int len, int x_val, int x_c) {
-    int y = INT_MAX;
-    for (int i = 0; i < len; i++) {
-
-        if ((circle[i]).x + x_c == x_val) {
-            y = y < (circle[i]).y ? y : (circle[i]).y;
-        }
-    }
-
-    if (y == INT_MAX)
+    if (y == (mode == down ? INT_MAX: INT_MIN))
         return 0;
     return y;
 }
 
-
-int draw_thicnless(Rgb*** data, point_t* circle_m, point_t* circle_b, BitmapInfoHeader bmih, int len_min, int len_big, Rgb color, int x_c, int y_c, int radius, int thickness) {
-    int x_min = x_c; int x_max = radius + x_c + thickness / 2;
-    int y_min = y_c; int y_max = radius + y_c + thickness / 2;
-
+int draw_thicnless(Rgb*** data, circle_t big_circle, circle_t min_circle, BitmapInfoHeader bmih, Rgb color) {
+    int x_min = big_circle.x_center; int x_max = big_circle.radius + big_circle.x_center;
+    int y_min = big_circle.y_center;
 
     for (int j = x_min; j <= x_max; j++) {
-
-        int y_up_lim = get_y_limit_up(circle_b, len_big, j, x_c);
-        int y_down_lim = get_y_limit_down(circle_m, len_min, j, x_c);
+        int y_up_lim = get_y_limit(big_circle, j, up);
+        int y_down_lim = get_y_limit(min_circle, j, down);
 
         for (int i = y_down_lim; i <= y_up_lim; i++) {
             if (check_coord(y_min + i, j, bmih.height, bmih.width))
@@ -474,26 +459,18 @@ int draw_thicnless(Rgb*** data, point_t* circle_m, point_t* circle_b, BitmapInfo
                 (*data)[y_min + i][2*x_min - j] = color;
             if (check_coord(y_min - i, 2* x_min - j, bmih.height, bmih.width))
                 (*data)[y_min - i][2* x_min - j] = color;
-
-
         }
-
-
-
     }
-
     return 1;
 }
 
-
-int draw_fill_circle(Rgb*** data, point_t* circle_m, BitmapInfoHeader bmih, int rad, int len_min, Rgb color, int x_c, int y_c) {
-    int x_min = x_c; int x_max = rad + x_c ;
-    int y_min = y_c; int y_max = rad + y_c;
+int draw_fill_circle(Rgb*** data, BitmapInfoHeader bmih, circle_t circle , Rgb color) {
+    int x_min = circle.x_center; int x_max = circle.radius + circle.x_center ;
+    int y_min = circle.y_center;
 
 
     for (int j = x_min; j <= x_max; j++) {
-
-        int y_up_lim = get_y_limit_up(circle_m, len_min, j, x_c);
+        int y_up_lim = get_y_limit(circle, j, up);
 
         for (int i = 0; i <= y_up_lim; i++) {
             if (check_coord(y_min + i, j, bmih.height, bmih.width))
@@ -510,35 +487,59 @@ int draw_fill_circle(Rgb*** data, point_t* circle_m, BitmapInfoHeader bmih, int 
     return 1;
 }
 
-int draw_circle(Rgb*** data, BitmapInfoHeader bmih, Rgb color, Rgb color_fill, int thickness, int radius, int fill, int x_c, int y_c) {
-    thickness = (thickness  % 2 == 0) ? thickness + 1 : thickness;
+int draw_circle(Rgb*** data, BitmapInfoHeader bmih, Rgb color, Rgb color_fill, object_t figure) {
+    figure.thinckness = (figure.thinckness  % 2 == 0) ? figure.thinckness + 1 : figure.thinckness;
 
-    point_t* min_circle = malloc(sizeof(point_t) * (radius - thickness / 2 )*8);
-    point_t* big_circle = malloc(sizeof(point_t) * (radius + thickness / 2 )*8);
+    int radius_min = figure.radius - figure.thinckness / 2;
+    int radius_max = figure.radius + figure.thinckness / 2;
 
-    int len_min = circ_bre(radius - thickness / 2, min_circle);
-    int len_big = circ_bre(radius + thickness / 2, big_circle) ;
+    circle_t min_circle = {
+        .points = malloc(sizeof(point_t) * radius_min * 8),
+        .radius = radius_min,
+        .x_center = figure.x_center,
+        .y_center = figure.y_center,
+        .thickness = figure.thinckness,
+    };
 
+    circle_t big_circle = {
+        .points = malloc(sizeof(point_t) * radius_max * 8),
+        .radius = radius_max,
+        .x_center = figure.x_center,
+        .y_center = figure.y_center,
+        .thickness = figure.thinckness,
+    };
 
-    if (fill) {
-        draw_fill_circle(data,  min_circle, bmih, radius - thickness/ 2, len_min, color_fill, x_c, y_c);
-    }
+    min_circle.len_array = circ_bre(radius_min, min_circle.points);
+    big_circle.len_array = circ_bre(radius_max, big_circle.points);
 
-    draw_thicnless(data, min_circle, big_circle, bmih, len_min, len_big, color, x_c, y_c, radius, thickness);
+    if (figure.fill)
+        draw_fill_circle(data, bmih, min_circle, color_fill);
 
-    free(min_circle);
-    free(big_circle);
+    draw_thicnless(data, big_circle, min_circle, bmih, color);
+
+    free(min_circle.points);
+    free(big_circle.points);
 
     return 0;
 
 }
 
-int rectangle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count, int thickness, Rgb color) {
-    thickness = (thickness  % 2 == 0) ? thickness + 1 : thickness;
-
+int rectangle_ornament(Rgb*** data, BitmapInfoHeader bmih, object_t figure, Rgb color) {
+    int thickness = (figure.thinckness  % 2 == 0) ? figure.thinckness + 1 : figure.thinckness;
     int diff = thickness/2;
-    for (int i = 0; i < count; i++) {
-        draw_rectangle(data, bmih, false, color, color, thickness, diff, bmih.width - diff, bmih.height - diff, diff);
+
+    for (int i = 0; i < figure.thinckness; i++) {
+
+        const object_t tmp_figure = {
+            .fill = figure.fill,
+            .thinckness = figure.thinckness,
+            .x_left_up = diff,
+            .x_right_down = bmih.width - diff,
+            .y_left_up = bmih.height - diff,
+            .y_right_down = diff
+        };
+
+        draw_rectangle(data, bmih, tmp_figure, (Rgb){0,0,0}, color); // Второй цвет никогда не будет использован
         diff += 2*thickness;
     }
     return 1;
@@ -550,35 +551,61 @@ int circle_ornament(Rgb*** data, BitmapInfoHeader bmih, Rgb color) {
     int min_radius = x_c < y_c ? x_c : y_c;
     int max_radius =  x_c + y_c;
 
-    int thickness = 2*(max_radius - min_radius);
+    object_t tmp_figure = {
+        .fill = false,
+        .thinckness = 2*(max_radius - min_radius),
+        .x_center = x_c,
+        .y_center = y_c,
+        .radius = max_radius,
+    };
 
-    draw_circle(data, bmih, color, color, thickness, max_radius, false, x_c, y_c);
+    draw_circle(data, bmih, color, (Rgb){0,0,0}, tmp_figure);
 
 }
 
-int semi_circle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count, int thickness, Rgb color) {
-    int width_radius = bmih.width % (count * 2) == 0?  bmih.width / (count * 2):  bmih.width / (count * 2) + 1;
-    int height_radius = bmih.height % (count * 2) == 0?  bmih.height / (count * 2):  bmih.height / (count * 2) + 1;
+int semi_circle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count,
+                         int thickness, Rgb color)
+{
+    // Calculate radii for the ornament elements
+    const int width_step = (bmih.width + count * 2 - 1) / (count * 2);
+    const int height_step = (bmih.height + count * 2 - 1) / (count * 2);
 
-    int diff_width = width_radius;
-    int diff_height = bmih.height - height_radius - 1;
+    int current_x = width_step;
+    int current_y = bmih.height - height_step - 1;
+
+    const Rgb bg_color = {0, 0, 0};
+    const bool no_fill = false;
 
     for (int i = 0; i < count; i++) {
-        draw_circle(data, bmih, color, color, thickness, width_radius, false, diff_width, 0);
-        draw_circle(data, bmih, color, color, thickness, width_radius, false, diff_width, bmih.height);
 
+        object_t horizontal_circle = {
+            .thinckness = thickness,
+            .fill = no_fill,
+            .radius = width_step,
+            .x_center = current_x,
+            .y_center = 0  // Top
+        };
+        draw_circle(data, bmih, color, bg_color, horizontal_circle);
 
-        draw_circle(data, bmih, color, color, thickness, height_radius, false, 0, diff_height);
-        draw_circle(data, bmih, color, color, thickness, height_radius, false, bmih.width, diff_height);
+        horizontal_circle.y_center = bmih.height;  // Bottom
+        draw_circle(data, bmih, color, bg_color, horizontal_circle);
 
+        object_t vertical_circle = {
+            .thinckness = thickness,
+            .fill = no_fill,
+            .radius = height_step,
+            .x_center = 0,
+            .y_center = current_y
+        };
+        draw_circle(data, bmih, color, bg_color, vertical_circle);
 
+        vertical_circle.x_center = bmih.width;
+        draw_circle(data, bmih, color, bg_color, vertical_circle);
 
-
-
-
-        diff_width += 2*width_radius;
-        diff_height -= 2*height_radius;
+        current_x += 2 * width_step;
+        current_y -= 2 * height_step;
     }
+
     return 0;
 }
 
@@ -598,7 +625,7 @@ int canvas_logic(object_t figure) {
 
     switch (figure.mod) {
         case rect:
-            draw_rectangle(&data, bmih, figure.fill, color_fill, color, figure.thinckness, figure.x_left_up, figure.x_right_down, figure.y_left_up, figure.y_right_down);
+            draw_rectangle(&data, bmih, figure, color_fill, color);
             break;
         case ornament:
             switch (figure.pattern) {
@@ -606,7 +633,7 @@ int canvas_logic(object_t figure) {
                     circle_ornament(&data, bmih, color);
                     break;
                 case rectangle:
-                    rectangle_ornament(&data, bmih, figure.count, figure.thinckness, color);
+                    rectangle_ornament(&data, bmih, figure, color);
                     break;
                 case semicircle:
                     semi_circle_ornament(&data, bmih, figure.count, figure.thinckness, color);
@@ -615,10 +642,12 @@ int canvas_logic(object_t figure) {
 
             break;
         case rotate:
-             data = rotate_area(&data, bmih, figure.angle, figure.x_left_up, figure.x_right_down, figure.y_left_up, figure.y_right_down);
+            data = rotate_area(&data, bmih, figure);
+            if (data == NULL)
+                return 1;
             break;
         case circ:
-            draw_circle(&data, bmih, color, color_fill, figure.thinckness, figure.radius, figure.fill, figure.x_center, figure.y_center);
+            draw_circle(&data, bmih, color, color_fill, figure);
             break;
         case info:
             print_file_header(bmfh);
@@ -1981,36 +2010,12 @@ int main(int argc, char* argv[]){
     object_t* figure = malloc(sizeof(object_t));
     constuctor(figure);
 
-
     if (base_parser(figure, argc, argv)) return 41;
 
     if (base_checker(figure)) return 42;
 
-    printf("mod %d\n", figure->mod);
-    printf("pattern %d\n", figure->pattern);
-    printf(" x_lu %d\n", figure->x_left_up);
-    printf("y_lu %d\n", figure->y_left_up);
-    printf("x_rd %d\n", figure->x_right_down);
-    printf("y_rd %d\n", figure->y_right_down);
-    printf("thincless %d\n", figure->thinckness);
-    printf("color %d  %d  %d\n", figure->color_r, figure->color_g, figure->color_b);
-    printf("fill %d\n", figure->fill);
-    printf("color_fill %d  %d  %d\n", figure->color_fill_r, figure->color_fill_g, figure->color_fill_b);
-    printf("count %d\n", figure->count);
-    printf("angle  %d\n", figure->angle);
-    printf("x_c, y_c %d  %d\n", figure->x_center, figure->y_center);
-    printf("rad %d\n", figure->radius);
-
-
-
-    puts(figure->start_filename);
-
-    puts(figure->finish_filename);
-
-
     canvas_logic(*figure);
 
-    
     free(figure);
 
     return 0;

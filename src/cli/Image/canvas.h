@@ -7,6 +7,6 @@
 #include "canvas_rect.h"
 #include "canvas_rotate.h"
 
-int canvas_logic(object_t);
+bool canvas_logic(object_t);
 
 #endif //CANVAS_H

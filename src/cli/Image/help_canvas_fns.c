@@ -1,7 +1,7 @@
 #include "help_canvas_fns.h"
 
 /**
-* @brief Данная функция проверяет, выходит ли за пределы изображения координаты.
+ * @brief Данная функция проверяет, выходит ли за пределы изображения координаты.
  */
 bool check_coord(int y, int x, int height, int weight){
     if((x >= 0 && x < weight) && (y >= 0 && y < height))
@@ -9,9 +9,13 @@ bool check_coord(int y, int x, int height, int weight){
     return 0;
 }
 
+
 Rgb** copy_array(Rgb** data, int height, int width){
     Rgb** new_array = NULL;
     new_array = (Rgb** )(malloc(sizeof(Rgb* ) * (height)));
+
+    if (new_array == NULL)
+        return NULL;
 
     for (int i = 0; i < (height); i++) {
         (new_array)[i] = (Rgb *)malloc(width * sizeof(Rgb));

@@ -86,3 +86,6 @@ bool parce_circle(int argc, char** argv, object_t* figure) {
     get_filename(figure, argc, argv);
     return 0;
 }
+
+
+

@@ -5,11 +5,6 @@
 
 #include "parcer.h"
 
-// Пока так.
-void print_help() {
-    printf("Course work for option 5.1, created by Ivan Aleinikov\n");
-}
-
 
 /**
  * @brief Данная функция является логической функции парсера, которая проверяет все команды
@@ -27,8 +22,11 @@ void print_help() {
  */
 bool base_parser(object_t* figure, int argc, char** argv) {
 
-    if (argc == 1)    // Проверка на то, что если не передано аргументов, про программа ничего не делает.
-        return 1;
+    if (argc == 1){
+        help_print();
+        return 0;
+      }
+
 
     static struct option long_options[] = {
         {"rect", no_argument, 0, 0},
@@ -105,7 +103,6 @@ bool base_parser(object_t* figure, int argc, char** argv) {
                     fprintf(stderr, "Error: Передано слишком много аргументов.\n");
                     return 1;
                 }
-                print_help();
                 help_print();
                 return 1;
 
@@ -118,3 +115,4 @@ bool base_parser(object_t* figure, int argc, char** argv) {
 
     return 0;
 }
+

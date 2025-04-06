@@ -4,8 +4,8 @@
 #include "../structures.h"
 
 int get_padding(unsigned int);
-int write_bmp(const char*, const BitmapFileHeader*, const BitmapInfoHeader*, Rgb**);
-int read_bmp(const char*, BitmapFileHeader*, BitmapInfoHeader*, Rgb***);
+bool write_bmp(const char*, const BitmapFileHeader*, const BitmapInfoHeader*, Rgb**);
+bool read_bmp(const char*, BitmapFileHeader*, BitmapInfoHeader*, Rgb***);
 void print_file_header(BitmapFileHeader);
 void print_info_header(BitmapInfoHeader);
 

@@ -61,6 +61,8 @@ bool checker_thinckness(object_t* figure) {
     return 0;
 }
 
+
+
 /**
  * @brief Данная функция проверяет на корректность заполненность полей координат левой точки.
  *
@@ -78,6 +80,7 @@ bool checker_left_up(object_t* figure) {
     return 0;
 }
 
+
 /**
  * @brief Данная функция проверяет на корректность заполненность полей координат правой точки.
  *
@@ -94,6 +97,7 @@ bool checker_right_down(object_t* figure) {
     }
     return 0;
 }
+
 
 
 /**
@@ -118,3 +122,5 @@ bool checker_fill(object_t* figure) {
 
     return 0;
 }
+
+

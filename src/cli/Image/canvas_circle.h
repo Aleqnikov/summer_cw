@@ -5,11 +5,10 @@
 #include "help_canvas_fns.h"
 
 int circ_bre(int, point_t*);
-int get_y_limit_up(point_t*, int, int, int);
-int get_y_limit_down(point_t*, int, int, int);
-int draw_thicnless(Rgb***, point_t*, point_t*, BitmapInfoHeader, int, int, Rgb, int, int, int, int);
-int draw_fill_circle(Rgb***, point_t*, BitmapInfoHeader, int, int, Rgb, int, int);
-int draw_circle(Rgb***, BitmapInfoHeader, Rgb, Rgb, int, int, int, int, int);
+int get_y_limit(circle_t, int, limit_circle_mod);
+void draw_thicnless(Rgb***, circle_t, circle_t, BitmapInfoHeader, Rgb);
+void draw_fill_circle(Rgb***, BitmapInfoHeader, circle_t , Rgb);
+void draw_circle(Rgb***, BitmapInfoHeader, Rgb, Rgb, object_t);
 
 
 #endif //CANVAS_CIRCLE_H
