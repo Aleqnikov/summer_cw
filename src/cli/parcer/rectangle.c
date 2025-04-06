@@ -88,3 +88,4 @@ bool parce_rectangle(int argc, char** argv, object_t* figure) {
     get_filename(figure, argc, argv);
     return 0;
 }
+

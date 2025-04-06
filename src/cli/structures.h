@@ -13,6 +13,14 @@
 #include <ctype.h>
 #include <string.h>
 #include <limits.h>
+#include <math.h>
+
+
+/**
+ * @file main.с
+ * @brief Весенняя курсовая работа
+ */
+
 
 /**
  * @brief Перечисление режимов для орнамента.
@@ -38,44 +46,8 @@ typedef enum Mode {rect, ornament, rotate, circ, info, help, None} mode;
  */
 enum count_arguments {one_read = 1, two_read = 2, three_read = 3};
 
+typedef enum  {up = 1, down = -1} limit_circle_mod;
 
-/**
- * @brief Структура, которая является собирательным образом всех параметров, которые нужны для
- * работы каждого из режимов. Предполагается, что взаимодействие внутри программы происходит
- * за счёт последовательной передачи объекта данной структуры.
- *
- * Данная структура включает все возможные поля для реализации всех режимов работы программы. Предполагается, что
- * Взаимодействие частей программы происходит при передачи экземпляра данной структуры внутри программы. По сути,
- * является классом данных, для более удобного формата хранения и взаимодействия с данными.
- */
-
-typedef struct Object {
-    /** @brief Режим работы программы.*/
-    mode mod;  
-
-    char* start_filename;                               /** @brief Имя файла, который нужно обработать.*/
-    char* finish_filename;                              /** @brief Имя файла, который должно быть после обработки.*/
-
-    int x_left_up, y_left_up;                           /** @brief Координаты левой верхней точки.*/
-    int x_right_down, y_right_down;                     /** @brief Координаты правой нижней точки.*/
-
-    int thinckness;                                     /** @brief Толшина линии.*/
-
-    int color_r, color_g, color_b;                      /** @brief Цвет линии.*/
-
-    bool fill;                                          /** @brief Нужно ли заливать фигуру.*/
-
-    int color_fill_r, color_fill_g, color_fill_b;       /** @brief Цвета заливки*/
-
-    pattern_t pattern;                                  /** @brief Режим для создания узора.*/
-
-    int count;                                          /** @brief Количество элементов узора.*/
-
-    int angle;                                          /** @brief Угол поворота части изображения.*/
-
-    int x_center, y_center;                             /** @brief Координаты центра окружности.*/
-    int radius;                                         /** @brief Радиус окружности*/
-} object_t ;
 
 #pragma pack(push, 1)
 /**
@@ -111,12 +83,59 @@ typedef struct {
 
 #pragma pack(pop)
 
+
+/**
+ * @brief Структура, которая является собирательным образом всех параметров, которые нужны для
+ * работы каждого из режимов. Предполагается, что взаимодействие внутри программы происходит
+ * за счёт последовательной передачи объекта данной структуры.
+ *
+ * Данная структура включает все возможные поля для реализации всех режимов работы программы. Предполагается, что
+ * Взаимодействие частей программы происходит при передачи экземпляра данной структуры внутри программы. По сути,
+ * является классом данных, для более удобного формата хранения и взаимодействия с данными.
+ */
+
+typedef struct Object {
+    /** @brief Режим работы программы.*/
+    mode mod;
+
+    char* start_filename;                               /** @brief Имя файла, который нужно обработать.*/
+    char* finish_filename;                              /** @brief Имя файла, который должно быть после обработки.*/
+
+    int x_left_up, y_left_up;                           /** @brief Координаты левой верхней точки.*/
+    int x_right_down, y_right_down;                     /** @brief Координаты правой нижней точки.*/
+
+    int thinckness;                                     /** @brief Толшина линии.*/
+
+    int color_r, color_g, color_b;                      /** @brief Цвет линии.*/
+
+    bool fill;                                          /** @brief Нужно ли заливать фигуру.*/
+
+    int color_fill_r, color_fill_g, color_fill_b;       /** @brief Цвета заливки*/
+
+    pattern_t pattern;                                  /** @brief Режим для создания узора.*/
+
+    int count;                                          /** @brief Количество элементов узора.*/
+
+    int angle;                                          /** @brief Угол поворота части изображения.*/
+
+    int x_center, y_center;                             /** @brief Координаты центра окружности.*/
+    int radius;                                         /** @brief Радиус окружности*/
+} object_t ;
+
 /**
  * @brief Используется при получении координат растровых фигут.
  */
 typedef struct {
     int x, y;
 } point_t;
+
+typedef struct {
+    int x_center, y_center;
+    int radius;
+    int thickness;
+    int len_array;
+    point_t* points;
+} circle_t;
 
 
 /**

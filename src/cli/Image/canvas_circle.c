@@ -5,80 +5,61 @@
 int circ_bre(int rad, point_t* circle){
     int x = 0;
     int y = rad;
-    int d = 3 - 2 * rad;  // Initial decision parameter
+    int d = 3 - 2 * rad;
 
     int index = 0;
 
-    // Generate points for the first quarter (x >= 0, y >= 0, x² + y² ≈ r²)
     while (x <= y)
     {
-        // Store the point in the first octant (x, y)
         circle[index].x = x;
         circle[index].y = y;
+
         index++;
 
-        // Store the symmetric point in the second octant (y, x) — тоже в первой четверти!
-        if (x != y)  // Чтобы не дублировать точку при x == y (на диагонали)
-        {
+        if (x != y){
             circle[index].x = y;
             circle[index].y = x;
             index++;
         }
 
-        // Update decision parameter and coordinates
-        if (d < 0)
-        {
+        if (d < 0) {
             d = d + 4 * x + 6;
         }
-        else
-        {
+        else {
             d = d + 4 * (x - y) + 10;
             y--;
         }
         x++;
     }
 
-    return index;  // Return the number of points stored
+    return index;
 }
 
-int get_y_limit_up(point_t* circle, int len, int x_val, int x_c) {
-    int y = INT_MIN;
-    for (int i = 0; i < len; i++) {
-        if ((circle[i]).x + x_c == x_val) {
-            y = y >(circle[i]).y ? y : (circle[i]).y;
+int get_y_limit(circle_t cirlce, int x_val, limit_circle_mod mode){
+    int y = (mode == down? INT_MAX: INT_MIN);
+
+    for (int i = 0; i < cirlce.len_array; i++) {
+
+        if ((cirlce.points[i]).x + cirlce.x_center == x_val) {
+            if (mode == down)
+                y = y < (cirlce.points[i]  ).y ? y : (cirlce.points[i]).y;
+            else
+                y = y > (cirlce.points[i]  ).y ? y : (cirlce.points[i]).y;
         }
     }
 
-    if (y == INT_MIN)
-        return 0;
-
-    return y;
-}
-
-int get_y_limit_down(point_t* circle, int len, int x_val, int x_c) {
-    int y = INT_MAX;
-    for (int i = 0; i < len; i++) {
-
-        if ((circle[i]).x + x_c == x_val) {
-            y = y < (circle[i]).y ? y : (circle[i]).y;
-        }
-    }
-
-    if (y == INT_MAX)
+    if (y == (mode == down ? INT_MAX: INT_MIN))
         return 0;
     return y;
 }
 
-
-int draw_thicnless(Rgb*** data, point_t* circle_m, point_t* circle_b, BitmapInfoHeader bmih, int len_min, int len_big, Rgb color, int x_c, int y_c, int radius, int thickness) {
-    int x_min = x_c; int x_max = radius + x_c + thickness / 2;
-    int y_min = y_c; int y_max = radius + y_c + thickness / 2;
-
+void draw_thicnless(Rgb*** data, circle_t big_circle, circle_t min_circle, BitmapInfoHeader bmih, Rgb color) {
+    int x_min = big_circle.x_center; int x_max = big_circle.radius + big_circle.x_center;
+    int y_min = big_circle.y_center;
 
     for (int j = x_min; j <= x_max; j++) {
-
-        int y_up_lim = get_y_limit_up(circle_b, len_big, j, x_c);
-        int y_down_lim = get_y_limit_down(circle_m, len_min, j, x_c);
+        int y_up_lim = get_y_limit(big_circle, j, up);
+        int y_down_lim = get_y_limit(min_circle, j, down);
 
         for (int i = y_down_lim; i <= y_up_lim; i++) {
             if (check_coord(y_min + i, j, bmih.height, bmih.width))
@@ -89,24 +70,17 @@ int draw_thicnless(Rgb*** data, point_t* circle_m, point_t* circle_b, BitmapInfo
                 (*data)[y_min + i][2*x_min - j] = color;
             if (check_coord(y_min - i, 2* x_min - j, bmih.height, bmih.width))
                 (*data)[y_min - i][2* x_min - j] = color;
-
         }
-
-
     }
-
-    return 1;
 }
 
-
-int draw_fill_circle(Rgb*** data, point_t* circle_m, BitmapInfoHeader bmih, int rad, int len_min, Rgb color, int x_c, int y_c) {
-    int x_min = x_c; int x_max = rad + x_c ;
-    int y_min = y_c; int y_max = rad + y_c;
+void draw_fill_circle(Rgb*** data, BitmapInfoHeader bmih, circle_t circle , Rgb color) {
+    int x_min = circle.x_center; int x_max = circle.radius + circle.x_center ;
+    int y_min = circle.y_center;
 
 
     for (int j = x_min; j <= x_max; j++) {
-
-        int y_up_lim = get_y_limit_up(circle_m, len_min, j, x_c);
+        int y_up_lim = get_y_limit(circle, j, up);
 
         for (int i = 0; i <= y_up_lim; i++) {
             if (check_coord(y_min + i, j, bmih.height, bmih.width))
@@ -120,28 +94,38 @@ int draw_fill_circle(Rgb*** data, point_t* circle_m, BitmapInfoHeader bmih, int 
         }
     }
 
-    return 1;
 }
 
-int draw_circle(Rgb*** data, BitmapInfoHeader bmih, Rgb color, Rgb color_fill, int thickness, int radius, int fill, int x_c, int y_c) {
-    thickness = (thickness  % 2 == 0) ? thickness + 1 : thickness;
+void draw_circle(Rgb*** data, BitmapInfoHeader bmih, Rgb color, Rgb color_fill, object_t figure) {
+    figure.thinckness = (figure.thinckness  % 2 == 0) ? figure.thinckness + 1 : figure.thinckness;
 
-    point_t* min_circle = malloc(sizeof(point_t) * (radius - thickness / 2 )*8);
-    point_t* big_circle = malloc(sizeof(point_t) * (radius + thickness / 2 )*8);
+    int radius_min = figure.radius - figure.thinckness / 2;
+    int radius_max = figure.radius + figure.thinckness / 2;
 
-    int len_min = circ_bre(radius - thickness / 2, min_circle);
-    int len_big = circ_bre(radius + thickness / 2, big_circle) ;
+    circle_t min_circle = {
+        .points = malloc(sizeof(point_t) * radius_min * 8),
+        .radius = radius_min,
+        .x_center = figure.x_center,
+        .y_center = figure.y_center,
+        .thickness = figure.thinckness,
+    };
 
+    circle_t big_circle = {
+        .points = malloc(sizeof(point_t) * radius_max * 8),
+        .radius = radius_max,
+        .x_center = figure.x_center,
+        .y_center = figure.y_center,
+        .thickness = figure.thinckness,
+    };
 
-    if (fill) {
-        draw_fill_circle(data,  min_circle, bmih, radius - thickness/ 2, len_min, color_fill, x_c, y_c);
-    }
+    min_circle.len_array = circ_bre(radius_min, min_circle.points);
+    big_circle.len_array = circ_bre(radius_max, big_circle.points);
 
-    draw_thicnless(data, min_circle, big_circle, bmih, len_min, len_big, color, x_c, y_c, radius, thickness);
+    if (figure.fill)
+        draw_fill_circle(data, bmih, min_circle, color_fill);
 
-    free(min_circle);
-    free(big_circle);
+    draw_thicnless(data, big_circle, min_circle, bmih, color);
 
-    return 0;
-
+    free(min_circle.points);
+    free(big_circle.points);
 }

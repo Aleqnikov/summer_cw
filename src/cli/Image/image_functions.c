@@ -1,14 +1,14 @@
 #include "image_functions.h"
 
-
 int get_padding(unsigned int width){
     return ((width*3 + 3) & (~3));
 }
 
+
 /**
  * @brief Данная функция записывает в файл.
  */
-int write_bmp(const char* filename, const BitmapFileHeader* bmfh, const BitmapInfoHeader* bmih, Rgb** data){
+bool write_bmp(const char* filename, const BitmapFileHeader* bmfh, const BitmapInfoHeader* bmih, Rgb** data){
     FILE* file = fopen(filename, "wb");
 
     if(!file){
@@ -23,7 +23,7 @@ int write_bmp(const char* filename, const BitmapFileHeader* bmfh, const BitmapIn
 
     int row_paded = get_padding(bmih->width);
 
-    for(int y = 0; y < bmih->height; y++){
+    for(int y = 0; y < abs(bmih->height); y++){
         for(int x = 0; x < bmih->width; x++){
             fwrite(&data[y][x], sizeof(Rgb), 1, file);
         }
@@ -38,10 +38,12 @@ int write_bmp(const char* filename, const BitmapFileHeader* bmfh, const BitmapIn
     return 0;
 }
 
+
+
 /**
 * @brief Данная функция считывает изображение BMP
 */
-int read_bmp(const char* filename, BitmapFileHeader* file_header, BitmapInfoHeader* info_header, Rgb*** data){
+bool read_bmp(const char* filename, BitmapFileHeader* file_header, BitmapInfoHeader* info_header, Rgb*** data){
     FILE* file = fopen(filename, "rb");
 
 
@@ -77,14 +79,14 @@ int read_bmp(const char* filename, BitmapFileHeader* file_header, BitmapInfoHead
     int row_padded = get_padding(info_header->width);
 
     // Выделяем память для массива указателей на строки пикселей
-    *data = (Rgb** )(malloc(sizeof(Rgb* )* info_header->height));
+    *data = (Rgb** )(malloc(sizeof(Rgb* )* abs(info_header->height)));
 
     if(!*data){
         fprintf(stderr, "Error: Не удалось выделить память под массив пикселей!\n");
         return 0;
     }
 
-    for (int i = 0; i < info_header->height; i++){
+    for (int i = 0; i < abs(info_header->height); i++){
 
 
         (*data)[i] = (Rgb *)malloc(info_header->width * sizeof(Rgb));
@@ -95,7 +97,7 @@ int read_bmp(const char* filename, BitmapFileHeader* file_header, BitmapInfoHead
         }
     }
 
-    for(int i = 0; i < info_header->height; i++){
+    for(int i = 0; i < abs(info_header->height); i++){
         for(int j = 0; j < info_header->width; j++){
             fread(&(*data)[i][j], sizeof(Rgb), 1, file);
         }
@@ -105,9 +107,10 @@ int read_bmp(const char* filename, BitmapFileHeader* file_header, BitmapInfoHead
 
     fclose(file);
 
-    return 1;
+   return 1;
 
 }
+
 
 /**
  * @brief Функция которая печатает информацию headera файла.
@@ -119,6 +122,7 @@ void print_file_header(BitmapFileHeader bmfh){
     printf("reserved2: \t%x (%hu)\n", bmfh.reserved2, bmfh.reserved2);
     printf("pixelArrOffset: \t%x (%u)\n", bmfh.pixelArrOffset, bmfh.pixelArrOffset);
 }
+
 
 
 /**

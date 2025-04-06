@@ -56,6 +56,7 @@ bool is_correct_dots(const char *str, int count_dots) {
 }
 
 
+
 /**
  * @brief Данная функция проверят, передал ли пользователь лишний аргумент, после флага, не требующего аргументы.
  *
@@ -107,6 +108,7 @@ bool is_correct_count_args(int argc, char** argv, char* name, char* start_filena
     return 0;
 }
 
+
 /**
  * @brief Функция сравнения считанных аргументов, и ожидаемого количества.
  *
@@ -133,6 +135,8 @@ bool comp_cnt_args(int read_count, int correct_count, char* name_mode) {
     return 0;
 }
 
+
+
 /**
  * @brief Данная функция осуществляет проверку на корректность аргументов - цвета.
  *
@@ -156,6 +160,8 @@ bool check_color(int argc, char** argv, char* name, char* filename_inp) {
 
     return 0;
 }
+
+
 
 /**
  * @brief Вспомогательная функция, помогает определить корректность цвета, диапазон, и количество считанного.
@@ -208,6 +214,8 @@ bool parce_coords(int argc, char** argv, char* name, char* filename_start) {
     return 0;
 }
 
+
+
 /**
  * @brief Данная функция является реализацией парсера флага --left_up.
  *
@@ -237,6 +245,7 @@ bool left_up(object_t* figure, int argc, char** argv) {
 }
 
 
+
 /**
  * @brief Данная функция является реализацией парсера флага --right_down.
  *
@@ -263,6 +272,7 @@ bool right_down(object_t* figure, int argc, char** argv) {
     figure->x_right_down = x; figure->y_right_down = y;
     return 0;
 }
+
 
 /**
  * @brief Данная функция явяется реализацией парсера для флага --thickness.
@@ -297,6 +307,7 @@ bool thickness(object_t* figure, int argc, char** argv) {
 
     return 0;
 }
+
 
 /**
  * @brief Функция, которая реализует парсинг флага --color.
@@ -366,6 +377,7 @@ bool input_name(object_t* figure, int argc, char** argv) {
     figure->start_filename = optarg;
     return 0;
 }
+
 
 /**
  * @brief Функция, которая реализует парсинг флага --output.
@@ -506,6 +518,7 @@ bool radius(object_t* figure, int argc, char** argv) {
 
     return 0;
 }
+
 
 /**
  * @brief Данная функция парсит флаг --count.

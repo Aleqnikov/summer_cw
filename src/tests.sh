@@ -24,11 +24,54 @@ test_cases=(
   "--circle --center 0.0 --radius 10 --thickness 1 --color 255.0.0 --fill --fill_color 255.255.255 --input image.bmp --output out.bmp # Нарисована белая окружность с заливкой и сохранена в out.bmp"
   "--rotate --left_up 0.0 --right_down 10.10 --angle 90 --input image.bmp --output out.png # Изображение повернуто и сохранено в out.png"
   "--ornament --pattern circle --color 255.0.0 --thickness 1 --count 3 --input image.bmp # Нарисован орнамент из 3 кругов"
+
 )
 
-for test_case in "${test_cases[@]}"
+test_cases2=(
+  "--input image.bmp --rect --left_up 0.0 --right_down 50.50 --thickness 2 --color 0.255.0 --fill # Зелёный прямоугольник с заливкой"
+  "--left_up 10.10 --right_down 60.60 --rect --thickness 4 --color 128.0.128 --input image.bmp --fill_color 200.200.200 --fill # Фиолетовый прямоугольник с серой заливкой"
+  "--fill --color 0.0.255 --right_down 100.100 --left_up 20.20 --rect --thickness 3 --input image.bmp # Синий прямоугольник с заливкой"
+  "--input image.bmp --ornament --pattern circle --color 255.255.0 --thickness 2 --count 8 # Орнамент из 8 жёлтых кругов"
+  "--count 4 --pattern semicircles --thickness 3 --color 0.128.255 --ornament --input image.bmp # Орнамент из 4 синих полукругов"
+  "--circle --input image.bmp --center 40.40 --radius 30 --thickness 2 --color 255.0.255 --fill --fill_color 0.255.255 # Окружность с пурпурным контуром и голубой заливкой"
+  "--rotate --angle 90 --left_up 0.0 --right_down 100.100 --input image.bmp # Поворот области на 90 градусов"
+  "--input image.bmp --left_up 0.0 --right_down 50.50 --rotate --angle 180 # Поворот на 180 градусов"
+  "--angle 270 --right_down 90.90 --left_up 10.10 --input image.bmp --rotate # Поворот на 270 градусов"
+  "--rect --left_up 0.0 --right_down 10.10 --thickness 1 --color 255.255.255 --fill --fill_color 0.0.0 --output out.bmp --input image.bmp # Белый прямоугольник с черной заливкой, сохранен"
+  "--circle --input image.bmp --center 50.50 --radius 20 --thickness 2 --color 0.255.0 --fill_color 255.0.0 --fill --output circle.bmp # Окружность с зелёным контуром и красной заливкой"
+  "--ornament --pattern rectangle --count 0 --thickness 1 --color 255.0.0 --input image.bmp # Ошибка: количество 0"
+  "--rotate --angle 360 --left_up 0.0 --right_down 50.50 --input image.bmp # Ошибка: угол 360 не поддерживается"
+  "--circle --center 10.10 --radius ten --thickness 1 --color 255.0.0 --input image.bmp # Ошибка: радиус задан нечисловым значением"
+  "--rect --left_up 0.0 --right_down 10.10 --thickness 1 --color 256.0.0 --input image.bmp # Ошибка: значение цвета вне диапазона"
+  "--rect --input image.bmp --left_up 0.0 --right_down 0.0 --thickness 1 --color 0.0.0 # Прямоугольник с нулевой площадью (одна точка)"
+  "--rect --left_up 100.100 --right_down 200.200 --thickness 10 --color 255.255.255 --fill --fill_color 100.100.100 --input image.bmp # Большой прямоугольник с заливкой"
+  "--rect --right_down 50.50 --left_up 60.60 --thickness 1 --color 255.0.0 --input image.bmp # Ошибка: правый нижний угол левее верхнего левого"
+  "--rect --left_up 10.10 --right_down 20.20 --thickness 0 --color 255.0.0 --input image.bmp # Ошибка: толщина равна нулю"
+  "--rect --left_up 10.10 --right_down 20.20 --thickness 1 --color 255.0 --input image.bmp # Ошибка: цвет задан неверно (недостаточно компонент)"
+  "--ornament --pattern rectangle --count 1 --thickness 1 --color 0.0.255 --input image.bmp # Орнамент из одного синего прямоугольника"
+  "--ornament --pattern fractal --count 5 --thickness 2 --color 128.128.128 --input image.bmp # Орнамент с нестандартным узором (fractal)"
+  "--ornament --pattern triangle --count 3 --thickness 1 --color 255.255.255 --input image.bmp # Орнамент с треугольниками"
+  "--ornament --pattern rectangle --thickness 1 --color 255.0.0 --input image.bmp # Ошибка: не указано количество"
+  "--ornament --pattern rectangle --count 3 --color 255.0.0 --input image.bmp # Ошибка: не указана толщина"
+  "--rotate --input image.bmp --left_up 0.0 --right_down 10.10 --angle 45 # Ошибка: угол поворота 45 не поддерживается"
+  "--rotate --left_up 0.0 --right_down 10.10 --angle 270 --input image.bmp --output rotated.bmp # Поворот изображения на 270 градусов, сохранён"
+  "--circle --center 50.50 --radius 25 --thickness 3 --color 255.255.0 --fill --fill_color 0.0.255 --input image.bmp # Жёлтая окружность с синей заливкой"
+  "--circle --center 50.50 --radius 0 --thickness 1 --color 255.0.0 --input image.bmp # Ошибка: радиус равен нулю"
+  "--circle --center 10.10 --radius 10 --thickness 1 --color 255.0.0 --fill_color 0.255.0 --input image.bmp # Ошибка: указана заливка, но нет флага --fill"
+  "--circle --center 10.10 --radius 10 --thickness 1 --color 255.0.0 --fill --input image.bmp --extra_flag # Ошибка: лишний флаг"
+  "--circle --center 10.10 --radius 10 --thickness 1 --color 255.0.0 --fill --fill_color 255.255.255 --input image.bmp --output out.bmp # Окружность сохранена"
+  "--info --input image.bmp # Печать информации о BMP"
+  "--info --output file.bmp --input image.bmp # Ошибка: лишний аргумент для info"
+  "--help --input image.bmp # Печать помощи"
+  "--fill --circle --center 10.10 --radius 20 --thickness 2 --color 0.0.0 --input image.bmp # Залитая чёрная окружность"
+
+)
+
+index=1
+for test_case in "${test_cases2[@]}"
 do
-    echo "Running: ./a.out $test_case"
+    echo "[$index] Running: ./a.out $test_case"
     eval "./a.out $test_case"
     echo ""
+    ((index++))
 done

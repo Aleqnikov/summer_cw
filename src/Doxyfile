@@ -992,7 +992,6 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT = cli/main.c cli/structures.h cli/checker cli/parcer
-
 RECURSIVE = YES
 FILE_PATTERNS = *.c *.h
 EXTRACT_ALL = YES
@@ -1004,9 +1003,11 @@ INCLUDE_GRAPH = YES
 INCLUDED_BY_GRAPH = YES
 CLASS_GRAPH = YES
 COLLABORATION_GRAPH = YES
-DOT_IMAGE_FORMAT = png  # Или svg для лучшего качества
-DOTFILE_DIRS = .  # Директория, в которой искать файлы .dot
+DOT_PATH = /usr/bin
+
+DOT_IMAGE_FORMAT = png
 DOT_CLEANUP = YES
+
 
 
 
