@@ -8,8 +8,6 @@
 #include "checker/base_checker.h"
 #include "Image/canvas.h"
 
-
-
 /**
  * @brief Функция конструктор заполняет структуру базовыми значениями, предполагается, что такие значения не могут
  * получится в случае парсера, поэтому можно будет проверить, ввел ли пользователь тому или иному полю значение.
@@ -45,21 +43,25 @@ void constuctor(object_t* obj) {
     obj->color_b = base_color_val;
 }
 
-
 int main(int argc, char* argv[]){
     printf("Course work for option 5.1, created by Ivan Aleinikov\n");
 
     object_t* figure = malloc(sizeof(object_t));
     constuctor(figure);
 
-    if (base_parser(figure, argc, argv)) return 41;
-
+    if (base_parser(figure, argc, argv)){
+        help_print();
+        return 41;
+    }
+        
     switch (base_checker(figure)) {
         case 1:
+            help_print();
             return 42;
         case 2:
             fprintf(stderr, "Error: были переданны неккоректные параметры для выборанной вами функци!\n");
-        return 43;
+            help_print();
+            return 43;
     }
 
     canvas_logic(*figure);

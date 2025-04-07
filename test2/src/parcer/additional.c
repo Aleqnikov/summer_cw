@@ -1,7 +1,7 @@
 /**
 * @file additional.c
- * @brief В данном файле находятся вспомогательные функции для функций парсера.
- */
+* @brief В данном файле находятся вспомогательные функции для функций парсера.
+*/
 
 #include "additional.h"
 
@@ -39,11 +39,10 @@ bool is_correct_dots(const char *str, int count_dots) {
     char* dot = strchr(str, '.');
 
     for (int i = 0; i < count_dots; i++) {
-        if (!dot) return 0;   // Если точек меньше, то завершаем программу.
+        if (!dot) return 0;  
         dot = strchr(dot + 1, '.');
     }
 
-    // Проверка на корректность символов.
     if (!str || *str == '\0')
         return 0;
 
@@ -77,15 +76,23 @@ bool check_colors( int red, int green, int blue) {
 }
 
 
+/**
+ * @brief Данная функция устанавливает режим, который должна нарисовать программа.
+ * 
+ * Используется в парере для установки режима.
+ * 
+ * @param mode Режим
+ * @param figure объект, в который устанавливается режим.
+ */
 bool set_mode(const char* mode, object_t* figure){
     if(figure->mod != None)
         return 1;
+
     if( strcmp(mode, "rect") == 0)
         figure->mod = rect;
 
     if( strcmp(mode, "ornament") == 0)
         figure->mod = ornament;
-
 
     if( strcmp(mode, "circle") == 0)
         figure->mod = circ;
@@ -93,10 +100,8 @@ bool set_mode(const char* mode, object_t* figure){
     if( strcmp(mode, "rotate") == 0)
         figure->mod = rotate;
 
-
     if( strcmp(mode, "info") == 0)
         figure->mod = info;
 
     return 0;
-
 }

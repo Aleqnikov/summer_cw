@@ -1,3 +1,8 @@
+/**
+* @file help.c
+* @brief В данном файле находятcя справка о программе.
+*/
+
 #include "help.h"
 
 /**
@@ -27,8 +32,8 @@ void help_print(void) {
            "    --ornament [options] \n"
            "        -p --pattern [rectangle, circle, cemicircles]            Устанавливает режим орнамента.\n"
            "        -t --thickness <num>                                    Устанавливает тольщину линии.\n"
-           "        -C --color <rrr.ggg.bbb>                                Устанавливет цвет линии.\n"
-           "        -c --count <num>                                        Устанавливает количество.\n"
+           "        -c --color <rrr.ggg.bbb>                                Устанавливет цвет линии.\n"
+           "        -C --count <num>                                        Устанавливает количество.\n"
            "        -o --output <file.bmp>                                  Устанавливает название выходного файла.\n"
            "        -i --input <file.bmp>                                   Устанавливает название входного файла.\n"
            "    --rotate [options] \n"
@@ -38,10 +43,10 @@ void help_print(void) {
            "        -o --output <file.bmp>                                  Устанавливает название выходного файла.\n"
            "        -i --input <file.bmp>                                   Устанавливает название входного файла.\n"
            "    --circle [options]\n"
-           "        -c --center <x.y>                                       Устанавливает центр окружности.\n"
-           "        -r --radius <num>                                       Устанавливает радиус окружности.\n"
+           "        -n --center <x.y>                                       Устанавливает центр окружности.\n"
+           "        -R --radius <num>                                       Устанавливает радиус окружности.\n"
            "        -t --thickness <num>                                    Устанавливает толщину линий.\n"
-           "        -С --color <rrr.ggg.bbb>                                Устанавливет цвет линии.\n"
+           "        -c --color <rrr.ggg.bbb>                                Устанавливет цвет линии.\n"
            "        -f --fill                                               Устанавливает нужна ли заливка.\n"
            "        -F --fill_color <rrr.ggg.bbb>                           Устанавливает цвета заливки.\n\n"
            "        -o --output <file.bmp>                                  Устанавливает название выходного файла.\n"

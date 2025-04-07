@@ -1,6 +1,18 @@
+/**
+* @file canvas.c
+* @brief Главная функция, которая рисует на изоборжаении.
+* 
+* Используется в главном файле, при рисовании на изображении.
+*/
+
 #include "canvas.h"
 
-
+/**
+ * @brief Главная функция, которая оперирует вспомогательными функциями, и рисует на изображении.
+ * 
+ * Используется в функции main.
+ * @param Структура фигуры.
+ */
 int canvas_logic(object_t figure) {
     BitmapFileHeader bmfh;
     BitmapInfoHeader bmih;
@@ -11,51 +23,45 @@ int canvas_logic(object_t figure) {
         return 0;
     }
 
-    Rgb color_fill = (Rgb){figure.color_fill_b, figure.color_fill_g, figure.color_fill_g};
+    Rgb color_fill = (Rgb){figure.color_fill_b, figure.color_fill_g, figure.color_fill_r};
     Rgb color =  (Rgb){figure.color_b, figure.color_g, figure.color_r};
 
     switch (figure.mod) {
         case rect:
             draw_rectangle(&data, bmih, figure, color_fill, color);
-        break;
+            break;
         case ornament:
             switch (figure.pattern) {
                 case circle:
                     circle_ornament(&data, bmih, color);
-                break;
+                    break;
                 case rectangle:
                     rectangle_ornament(&data, bmih, figure, color);
-                break;
+                    break;
                 case semicircle:
                     semi_circle_ornament(&data, bmih, figure.count, figure.thinckness, color);
-                break;
+                    break;
             }
-
-        break;
+            break;
         case rotate:
             data = rotate_area(&data, bmih, figure);
-        if (data == NULL)
-            return 1;
-        break;
+            if (data == NULL)
+                return 1;
+            break;
         case circ:
             draw_circle(&data, bmih, color, color_fill, figure);
-        break;
+            break;
         case info:
             print_file_header(bmfh);
-        print_info_header(bmih);
-        break;
+            print_info_header(bmih);
+            break;
     }
 
-
-    // Записываем измененное изображение
-    if (!write_bmp(figure.finish_filename, &bmfh, &bmih, data)) {
+    if (!write_bmp(figure.finish_filename, &bmfh, &bmih, data)) 
         return 1;
-    }
-
-    // Освобождаем память
-    for (int i = 0; i < (bmih.height); i++) {
+    
+    for (int i = 0; i < (bmih.height); i++) 
         free(data[i]);
-    }
     free(data);
 
     return 0;

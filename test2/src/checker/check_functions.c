@@ -144,6 +144,17 @@ int check_rotate(object_t* figure) {
     return 0;
 }
 
+
+/**
+ * @brief Проверят корректность полей для --help.
+ *
+ * Данная функция проверяет инициализированны ли поля необходимые для режима  --help в переданной ей структуре.
+ * А также проверяет, что никакие лишние поля не инициализированны.
+ * Используется как вспомогательная функция.
+ *
+ * @param figure Указатель на объект.
+ * @return Ноль в случае удачи в ином случае единица.
+ */
 int check_info(object_t* figure) {
     if (figure->y_center != base_coords_val ||  figure->x_center != base_coords_val) return 2;
     if (figure->fill != false ||  figure->color_fill_b != base_color_val ||  figure->color_fill_g != base_color_val ||  figure->color_fill_r != base_color_val) return 2;
@@ -152,6 +163,7 @@ int check_info(object_t* figure) {
     if (figure->thinckness != base_thinckness_val ||  figure->color_b != base_color_val ||  figure->color_g != base_color_val ||  figure->color_r != base_color_val) return 2;
     if (figure->x_right_down != base_coords_val ||  figure->x_left_up != base_coords_val) return 2;
     if (figure->y_right_down != base_coords_val ||  figure->y_left_up != base_coords_val) return 2;
+    if(strcmp(figure->finish_filename, "out.bmp") != 0) return 2;
 
     return 0;
 }

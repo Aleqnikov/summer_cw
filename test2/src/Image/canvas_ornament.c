@@ -1,11 +1,24 @@
+/**
+* @file canvas_ornament.c
+* @brief Файл, который содержит функию для рисовании орнаментов на изображении.
+* 
+* Используется при рисовании орнаментов.
+*/
+
 #include "canvas_ornament.h"
 
-
+/**
+ * @brief Данная функция рисует орнамент прямоугольник на изображении.
+ *
+ * Используется как функция рисования орнамента.
+ * 
+ * @param Получает на вход указатель на массив данных, фигуры, и InfoHeader а также цвет.
+ */
 int rectangle_ornament(Rgb*** data, BitmapInfoHeader bmih, object_t figure, Rgb color) {
     int thickness = (figure.thinckness  % 2 == 0) ? figure.thinckness + 1 : figure.thinckness;
-    int diff = thickness/2;
+    int diff = thickness / 2;
 
-    for (int i = 0; i < figure.thinckness; i++) {
+    for (int i = 0; i < figure.count; i++) {
 
         const object_t tmp_figure = {
             .fill = figure.fill,
@@ -22,6 +35,13 @@ int rectangle_ornament(Rgb*** data, BitmapInfoHeader bmih, object_t figure, Rgb 
     return 1;
 }
 
+/**
+ * @brief Данная функция рисует орнамент круг на изображении.
+ *
+ * Используется как функция рисования орнамента.
+ * 
+ * @param Получает на вход указатель на массив данных, фигуры, и InfoHeader а также цвет.
+ */
 int circle_ornament(Rgb*** data, BitmapInfoHeader bmih, Rgb color) {
     int x_c = (bmih.width + 1) / 2;
     int y_c = (bmih.height + 1) / 2;
@@ -40,10 +60,14 @@ int circle_ornament(Rgb*** data, BitmapInfoHeader bmih, Rgb color) {
 
 }
 
-int semi_circle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count,
-                         int thickness, Rgb color)
-{
-    // Calculate radii for the ornament elements
+/**
+ * @brief Данная функция рисует орнамент из нескольких кругов на изображении.
+ *
+ * Используется как функция рисования орнамента.
+ * 
+ * @param Получает на вход указатель на массив данных, фигуры, и InfoHeader а также цвет, количество и толщину линии.
+ */
+int semi_circle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count, int thickness, Rgb color) {
     const int width_step = (bmih.width + count * 2 - 1) / (count * 2);
     const int height_step = (bmih.height + count * 2 - 1) / (count * 2);
 
@@ -60,11 +84,11 @@ int semi_circle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count,
             .fill = no_fill,
             .radius = width_step,
             .x_center = current_x,
-            .y_center = 0  // Top
+            .y_center = 0  
         };
         draw_circle(data, bmih, color, bg_color, horizontal_circle);
 
-        horizontal_circle.y_center = bmih.height;  // Bottom
+        horizontal_circle.y_center = bmih.height;  
         draw_circle(data, bmih, color, bg_color, horizontal_circle);
 
         object_t vertical_circle = {
@@ -85,4 +109,3 @@ int semi_circle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count,
 
     return 0;
 }
-

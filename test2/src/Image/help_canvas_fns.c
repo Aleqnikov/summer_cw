@@ -1,7 +1,18 @@
+/**
+* @file help_canvas_fns.c
+ * @brief  Содержит вспомогательные функции для рисования фигур на изображении.
+ * 
+ * Используется в файлах canvas_[...].
+ */
+
 #include "help_canvas_fns.h"
 
 /**
  * @brief Данная функция проверяет, выходит ли за пределы изображения координаты.
+ * 
+ * Используется при рисовании различных фигур.
+ * 
+ * @param Получает координаты точки, и характеристики изображения.
  */
 bool check_coord(int y, int x, int height, int weight){
     if((x >= 0 && x < weight) && (y >= 0 && y < height))
@@ -9,7 +20,14 @@ bool check_coord(int y, int x, int height, int weight){
     return 0;
 }
 
-
+/**
+ * @brief Данная функция копирует переданный ей массив типа Rgb и затем возварщает ссылку на новый скопированный массив.
+ * 
+ * Используется в функции поворота части изображения, для того чтобы получить новый массив, и поместить на 
+ * него новые пиксели, перемещённой области.
+ * 
+ * @param Массив данных, который нужно скопировать, и его хараектеристики, высота и длина.
+ */
 Rgb** copy_array(Rgb** data, int height, int width){
     Rgb** new_array = NULL;
     new_array = (Rgb** )(malloc(sizeof(Rgb* ) * (height)));
@@ -22,14 +40,18 @@ Rgb** copy_array(Rgb** data, int height, int width){
     }
 
     for(int i = 0; i < height; i++){
-        for(int j = 0; j < width; j++){
+        for(int j = 0; j < width; j++)
             new_array[i][j] = data[i][j];
-        }
     }
 
     return new_array;
 }
 
+/**
+* @brief Функция синуса, в зависимости от переданного угла возвращает значение.
+* Используется в функции поворота части изображения, для применения аффинных преобразований.
+* @param Получает угол 90 180 или 270 градусов. В ином случае не делает ничего, ибо другого угла передано быть не может.
+*/
 int custom_cos(int angle) {
     switch (angle) {
         case 90:
@@ -41,6 +63,11 @@ int custom_cos(int angle) {
     }
 }
 
+/**
+* @brief Функция синуса, в зависимости от переданного угла возвращает значение.
+* Используется в функции поворота части изображения, для применения аффинных преобразований.
+* @param Получает угол 90 180 или 270 градусов. В ином случае не делает ничего, ибо другого угла передано быть не может.
+*/
 int custom_sin(int angle) {
     switch (angle) {
         case 90:
@@ -51,3 +78,17 @@ int custom_sin(int angle) {
             return -1;
     }
 }
+
+/**
+ * @brief Данная функция проверяет входит ли функция в диапозон.
+ * 
+ * Используется в функции rotate.
+ */
+int get_value_range(int value, int low, int high){
+
+    if(value >= low && value < high)
+        return value;
+    if(value > high) return high - 1;
+    if(value < low) return low;
+}
+

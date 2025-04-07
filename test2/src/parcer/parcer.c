@@ -53,10 +53,6 @@ bool base_parser(object_t* figure, int argc, char** argv) {
     int opt, option_index = 0;
 
     while ((opt = getopt_long(argc, argv, "hp:l:r:t:o:i:fF:a:c:C:n:R:", long_options, &option_index)) != -1) {
-        if (opt == -1) {
-            break; // Конец аргументов
-        }
-
         switch (opt) {
             case 0:
                 if(set_mode(long_options[option_index].name, figure)){
@@ -66,7 +62,6 @@ bool base_parser(object_t* figure, int argc, char** argv) {
                 break;
 
             case 'h':
-                help_print();
                 return 1;
 
             case 'p':

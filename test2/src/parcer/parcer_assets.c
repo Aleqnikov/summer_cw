@@ -1,5 +1,18 @@
+/**
+* @file parcer_assets.c
+* @brief В данном файле находятся  функции для парсинга аргументов, переданных программе.
+*/
+
 #include "parcer_assets.h"
 
+/**
+ * @brief Функция, которая устанавлениват режим орнамента.
+ * 
+ * Используется в функции парсера, для установки режима орнамента.
+ * 
+ * @param optarg Переданный аргумент.
+ * @param figure Объект фигуры.
+ */
 bool parce_pattern(char* optarg, object_t* figure) {
     if (!strcmp(optarg, "rectangle")) figure->pattern = rectangle;
     if (!strcmp(optarg, "semicircles")) figure->pattern = semicircle;
@@ -13,6 +26,14 @@ bool parce_pattern(char* optarg, object_t* figure) {
     return 0;
 }
 
+/**
+ * @brief Функция, которая парсит флаг --left_up.
+ * 
+ * Используется в функции парсера.
+ * 
+ * @param optarg Переданный аргумент.
+ * @param figure Объект фигуры.
+ */
 bool parce_left_up(const char* optarg, object_t* figure) {
     if (is_correct_dots(optarg, 1)) {
         fprintf(stderr, "Error: Координаты переданы в некоректном формате!\n");
@@ -32,6 +53,14 @@ bool parce_left_up(const char* optarg, object_t* figure) {
     return 0;
 }
 
+/**
+ * @brief Функция, которая парсит флаг --right_down.
+ * 
+ * Используется в функции парсера.
+ * 
+ * @param optarg Переданный аргумент.
+ * @param figure Объект фигуры.
+ */
 bool parce_right_down(const char* optarg, object_t* figure) {
     if (is_correct_dots(optarg, 1)) {
         fprintf(stderr, "Error: Координаты переданы в некоректном формате!\n");
@@ -51,6 +80,14 @@ bool parce_right_down(const char* optarg, object_t* figure) {
     return 0;
 }
 
+/**
+ * @brief Функция, которая парсит флаг --angle.
+ * 
+ * Используется в функции парсера.
+ * 
+ * @param optarg Переданный аргумент.
+ * @param figure Объект фигуры.
+ */
 bool parce_angle(const char* optarg, object_t* figure) {
     if (!is_number(optarg)) {
         fprintf(stderr, "Error: вы ввели не число для --angle\n");
@@ -72,6 +109,14 @@ bool parce_angle(const char* optarg, object_t* figure) {
     return 0;
 }
 
+/**
+ * @brief Функция, которая парсит флаг --count.
+ * 
+ * Используется в функции парсера.
+ * 
+ * @param optarg Переданный аргумент.
+ * @param figure Объект фигуры.
+ */
 bool parce_count(const char* optarg, object_t* figure) {
     if (!is_number(optarg)) {
         fprintf(stderr, "Error: аргумент для --count должен быть числом!\n");
@@ -93,6 +138,14 @@ bool parce_count(const char* optarg, object_t* figure) {
     return 0;
 }
 
+/**
+ * @brief Функция, которая парсит флаг --thickness.
+ * 
+ * Используется в функции парсера.
+ * 
+ * @param optarg Переданный аргумент.
+ * @param figure Объект фигуры.
+ */
 bool parce_thickness(const char* optarg, object_t* figure) {
     if (!is_number(optarg)) {
         fprintf(stderr, "Error: вы ввели  не число для --thickness\n");
@@ -135,6 +188,14 @@ bool parce_color(const char* optarg, object_t* figure) {
     return 0;
 }
 
+/**
+ * @brief Функция, которая парсит флаг --fill_color.
+ * 
+ * Используется в функции парсера.
+ * 
+ * @param optarg Переданный аргумент.
+ * @param figure Объект фигуры.
+ */
 bool parce_fill_color(const char* optarg, object_t* figure) {
     if (is_correct_dots(optarg, 2)) {
         fprintf(stderr, "Error: Цвет передан в некоректном формате!\n");
@@ -156,6 +217,14 @@ bool parce_fill_color(const char* optarg, object_t* figure) {
     return 0;
 }
 
+/**
+ * @brief Функция, которая парсит флаг --center.
+ * 
+ * Используется в функции парсера.
+ * 
+ * @param optarg Переданный аргумент.
+ * @param figure Объект фигуры.
+ */
 bool parce_center(const char* optarg, object_t* figure) {
     if (is_correct_dots(optarg, 1)) {
         fprintf(stderr, "Error: Координаты переданы в некоректном формате!\n");
@@ -175,6 +244,14 @@ bool parce_center(const char* optarg, object_t* figure) {
     return 0;
 }
 
+/**
+ * @brief Функция, которая парсит флаг --radius.
+ * 
+ * Используется в функции парсера.
+ * 
+ * @param optarg Переданный аргумент.
+ * @param figure Объект фигуры.
+ */
 bool parce_radius(const char* optarg, object_t* figure) {
     if (!is_number(optarg)) {
         fprintf(stderr, "Error: вы ввели  не число для --radius\n");
@@ -194,5 +271,4 @@ bool parce_radius(const char* optarg, object_t* figure) {
     }
 
     return 0;
-
 }

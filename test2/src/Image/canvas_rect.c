@@ -1,5 +1,19 @@
+/**
+* @file canvas_rect.c
+* @brief Файл, который содержит функию для рисовании прямоугольника на изображении.
+* 
+* Используется при рисовании прямоугольника.
+*/
+
 #include "canvas_rect.h"
 
+/**
+ * @brief Данная функция рисует прямоугольник на изображении.
+ *
+ * Используется как функция рисования.
+ * 
+ * @param Получает на вход указатель на массив данных, фигуры, и InfoHeader.
+ */
 void draw_rectangle(Rgb*** data, BitmapInfoHeader bmih, object_t figure, Rgb color_fill, Rgb color) {
 
     int thickness = figure.thinckness;
