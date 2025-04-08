@@ -22,18 +22,18 @@ Rgb** rotate_area(Rgb*** data, BitmapInfoHeader bmih, object_t figure){
         return NULL;
 
     
-    int x_left = get_value_range(figure.x_left_up, 0, bmih.width);
-    int x_right = get_value_range(figure.x_right_down, 0, bmih.width);
+    int x_left = get_value_range(figure.x_left_up, 0, bmih.width, figure.thinckness / 2);
+    int x_right = get_value_range(figure.x_right_down, 0, bmih.width, figure.thinckness / 2);
     
-    int y_up = get_value_range(figure.y_left_up, 0, bmih.height);
-    int y_down = get_value_range(figure.y_right_down, 0, bmih.height);
+    int y_up = get_value_range(figure.y_left_up, 0, bmih.height, figure.thinckness / 2);
+    int y_down = get_value_range(figure.y_right_down, 0, bmih.height, figure.thinckness / 2);
 
     int x_center = (x_left + x_right) / 2;
     int y_center = (y_up + y_down) / 2;
 
 
-    for (int y = y_down; y <= y_up; y++) {
-        for (int x = x_left; x <= x_right; x++) {
+    for (int y = min(y_up, y_down); y < max(y_up, y_down); y++) {
+        for (int x = min(x_left, x_right); x < max(x_left, x_right) ; x++) {
             
             int x_shifted = x - x_center;
             int y_shifted = y - y_center;

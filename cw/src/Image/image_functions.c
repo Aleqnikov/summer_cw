@@ -45,10 +45,6 @@ bool read_bmp(const char* filename, BitmapFileHeader* file_header, BitmapInfoHea
         return 0;
     }
 
-    if (info_header->headerSize  != 124) {
-        fprintf(stderr, "Error: Поддерживается только версия BMPv5!\n");
-        return 0;
-    }
 
     if(info_header->compression != 0){
         fprintf(stderr, "Error: Программа не обрабатывает изображения со сжатием!\n");
@@ -157,3 +153,6 @@ void print_info_header(BitmapInfoHeader bmih){
     printf("colorsInColorTable: \t%x (%u)\n", bmih.colorsInColorTable, bmih.colorsInColorTable);
     printf("importantColorCount:\t%x (%u)\n", bmih.importantColorCount, bmih.importantColorCount);
 }
+
+
+

@@ -57,7 +57,7 @@ int custom_cos(int angle) {
         case 90:
             return 0;
         case 180:
-            return -1;
+            return 1;
         case 270:
             return 0;
     }
@@ -71,11 +71,11 @@ int custom_cos(int angle) {
 int custom_sin(int angle) {
     switch (angle) {
         case 90:
-            return 1;
+            return -1;
         case 180:
             return 0;
         case 270:
-            return -1;
+            return 1;
     }
 }
 
@@ -84,11 +84,21 @@ int custom_sin(int angle) {
  * 
  * Используется в функции rotate.
  */
-int get_value_range(int value, int low, int high){
+int get_value_range(int value, int low, int high, int thinkless){
 
-    if(value >= low && value < high)
+    if(value >= low - thinkless && value <= high + thinkless)
         return value;
-    if(value > high) return high - 1;
-    if(value < low) return low;
+    if(value > high + thinkless) return high + thinkless;
+    if(value < low - thinkless) return low - 1 - thinkless;
 }
+
+int max(int x, int y){
+    return x >= y? x: y;
+}
+
+int min (int x, int y){
+    return x <= y ? x : y;
+}
+
+
 

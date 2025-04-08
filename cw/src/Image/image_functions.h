@@ -11,4 +11,5 @@ void print_info_header(BitmapInfoHeader);
 
 
 
+
 #endif //IMAGE_FUNCTIONS_H
