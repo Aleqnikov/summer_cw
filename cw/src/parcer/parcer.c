@@ -20,7 +20,7 @@
  * @param argv Список аргументов.
  * @return Ноль если все хорошо, в ином случае код ошибки.
  */
-bool base_parser(object_t* figure, int argc, char** argv) {
+int base_parser(object_t* figure, int argc, char** argv) {
 
     if (argc == 1){
         help_print();
@@ -62,7 +62,8 @@ bool base_parser(object_t* figure, int argc, char** argv) {
                 break;
 
             case 'h':
-                return 1;
+                help_print();
+                return 2;
 
             case 'p':
                 if (parce_pattern(optarg, figure)) return 1;

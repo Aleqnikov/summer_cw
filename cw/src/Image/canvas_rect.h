@@ -3,6 +3,7 @@
 
 #include "image_functions.h"
 #include "help_canvas_fns.h"
+#include "canvas_line.h"
 
 void draw_rectangle(Rgb***, BitmapInfoHeader, object_t, Rgb, Rgb);
 

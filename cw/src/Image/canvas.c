@@ -26,6 +26,10 @@ int canvas_logic(object_t figure) {
     Rgb color_fill = (Rgb){figure.color_fill_b, figure.color_fill_g, figure.color_fill_r};
     Rgb color =  (Rgb){figure.color_b, figure.color_g, figure.color_r};
 
+    figure.y_center = bmih.height - figure.y_center;
+    figure.y_left_up = bmih.height - figure.y_left_up;
+    figure.y_right_down = bmih.height - figure.y_right_down;
+
     switch (figure.mod) {
         case rect:
             draw_rectangle(&data, bmih, figure, color_fill, color);

@@ -8,6 +8,6 @@
 #include "help.h"
 
 
-bool base_parser(object_t*, int, char** );
+int base_parser(object_t*, int, char** );
 
 #endif // PARCER_H

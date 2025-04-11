@@ -49,9 +49,13 @@ int main(int argc, char* argv[]){
     object_t* figure = malloc(sizeof(object_t));
     constuctor(figure);
 
-    if (base_parser(figure, argc, argv)){
-        help_print();
-        return 41;
+    
+
+    switch (base_parser(figure, argc, argv)) {
+        case 1:
+            return 41;
+        case 2:
+            return 0;
     }
         
     switch (base_checker(figure)) {
