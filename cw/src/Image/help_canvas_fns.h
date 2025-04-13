@@ -10,5 +10,6 @@ int custom_sin(int angle);
 int get_value_range(int, int, int, int);
 int max(int , int);
 int min (int, int);
+int was_fill(int, int, int, int, BitmapInfoHeader);
 
 #endif //HELP_CANVAS_FNS_H

@@ -6,21 +6,6 @@
 #include "help_functions.h"
 
 /**
- * @brief Данная функция проверяет, имеет ли файл расширение .bmp.
- *
- * Данная функция проверят, является ли корректным расширение файла, в данном случае bmp.
- * Используется как вспомогательная функция при проверке переданных аргументов.
- *
- * @param filename Имя файла.
- * @return Да или нет
- */
-bool check_dt_bmp(const char* filename) {
-    size_t len = strlen(filename);
-    return !(len >= 4 && strcmp(filename + len - 4, ".bmp") == 0);
-}
-
-
-/**
  * @brief Проверят на корректность заполненость цветов для определённого режима.
  *
  * Данная функция проверяет на корректность заполненность полей цвета в переданной структуре.
@@ -108,12 +93,5 @@ bool checker_fill(object_t* figure) {
         fprintf(stderr, "Error: Вы выбрали режим заливки, но не выбрали цвет!\n");
         return 1;
     }
-
-    if (!figure->fill && (figure->color_fill_b != -1 || figure->color_fill_r != -1 || figure->color_fill_g != -1)) {
-        fprintf(stderr, "Error: Вы не выбрали режим заливки, но выбрали цвет!\n");
-        return 1;
-    }
-
     return 0;
 }
-

@@ -5,8 +5,8 @@
 #include "canvas_circle.h"
 #include "canvas_rect.h"
 
-int rectangle_ornament(Rgb***, BitmapInfoHeader, object_t, Rgb);
-int circle_ornament(Rgb***, BitmapInfoHeader, Rgb);
-int semi_circle_ornament(Rgb***, BitmapInfoHeader, int, int, Rgb);
+void rectangle_ornament(Rgb***, BitmapInfoHeader, object_t, Rgb);
+void circle_ornament(Rgb***, BitmapInfoHeader, Rgb);
+void semi_circle_ornament(Rgb***, BitmapInfoHeader, int, int, Rgb);
 
 #endif //CANVAS_ONAMENT_H

@@ -1,6 +1,6 @@
 CC = gcc
 DEV = -Wall -Wextra
-CFLAGS =  -std=c99
+CFLAGS =  -std=c99 
 OBJ = main.o parcer/parcer_assets.o  parcer/parcer.o  parcer/additional.o parcer/help.o checker/base_checker.o checker/check_functions.o checker/help_functions.o Image/canvas.o Image/canvas_circle.o Image/canvas_ornament.o Image/canvas_rect.o Image/canvas_rotate.o Image/canvas_line.o Image/help_canvas_fns.o Image/image_functions.o
 EXEC = cw
 

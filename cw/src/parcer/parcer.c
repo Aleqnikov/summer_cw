@@ -114,6 +114,7 @@ int base_parser(object_t* figure, int argc, char** argv) {
             case 'F':
                 if (parce_fill_color(optarg, figure))
                     return 1;
+                
                 break;
 
             case 'n':
