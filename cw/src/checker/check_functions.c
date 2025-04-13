@@ -82,10 +82,10 @@ int check_ornament(object_t* figure) {
     if (figure->x_right_down != base_coords_val ||  figure->x_left_up != base_coords_val) return 2;
     if (figure->y_right_down != base_coords_val ||  figure->y_left_up != base_coords_val) return 2;
 
+    if (checker_color(figure)) return 1;
 
     switch (figure->pattern) {
         case rectangle:
-            if (checker_color(figure)) return 1;
             if (checker_thinckness(figure)) return 1;
 
             if (figure->count == base_count_val) {
@@ -94,10 +94,8 @@ int check_ornament(object_t* figure) {
             }
             break;
         case circle:
-            if (figure->thinckness != base_thinckness_val || figure->count != base_count_val) return 2;
             break;
         case semicircle:
-            if (checker_color(figure)) return 1;
             if (checker_thinckness(figure)) return 1;
             if (figure->count == base_count_val) {
                 fprintf(stderr, "Error: Вы не ввели количество фигур!\n");

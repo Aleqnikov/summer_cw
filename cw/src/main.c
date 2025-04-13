@@ -49,8 +49,6 @@ int main(int argc, char* argv[]){
     object_t* figure = malloc(sizeof(object_t));
     constuctor(figure);
 
-    
-
     switch (base_parser(figure, argc, argv)) {
         case 1:
             return 41;

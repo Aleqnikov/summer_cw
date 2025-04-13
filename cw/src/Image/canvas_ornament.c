@@ -12,27 +12,35 @@
  *
  * Используется как функция рисования орнамента.
  * 
- * @param Получает на вход указатель на массив данных, фигуры, и InfoHeader а также цвет.
+ * @param data Массив пикселей.
+ * @param bmih Информация о файле.
+ * @param color Цвет кругов.
+ * @param figure Информация для рисования линий.
  */
-int rectangle_ornament(Rgb*** data, BitmapInfoHeader bmih, object_t figure, Rgb color) {
-    int thickness = (figure.thinckness  % 2 == 0) ? figure.thinckness + 1 : figure.thinckness;
-    int diff = thickness / 2;
-
+void rectangle_ornament(Rgb*** data, BitmapInfoHeader bmih, object_t figure, Rgb color) {
     for (int i = 0; i < figure.count; i++) {
 
-        const object_t tmp_figure = {
-            .fill = figure.fill,
-            .thinckness = figure.thinckness,
-            .x_left_up = diff,
-            .x_right_down = bmih.width - diff,
-            .y_left_up = bmih.height - diff,
-            .y_right_down = diff
-        };
+        int x_1 = 2 * i * figure.thinckness;
+        int y_1 = 2 * i * figure.thinckness;
+        int x_2 = bmih.width - 2 * i * figure.thinckness - 1;
+        int y_2 = figure.thinckness + 2 * i * figure.thinckness - 1;
+        int x_3 = bmih.width - figure.thinckness - 2 * i * figure.thinckness;
+        int y_3 = bmih.height - 2 * i * figure.thinckness - 1;
+        int x_4 = figure.thinckness + 2 * i * figure.thinckness - 1;
+        int y_4 = bmih.height - 2 * i * figure.thinckness - 1;
+        int x_5 = 2 * i * figure.thinckness;
+        int y_5 = bmih.height - figure.thinckness - 2 * i * figure.thinckness;
 
-        draw_rectangle(data, bmih, tmp_figure, (Rgb){0,0,0}, color); // Второй цвет никогда не будет использован
-        diff += 2*thickness;
+        const object_t tmp_figure1 = { .fill = true, .thinckness = 0, .x_left_up = x_1, .x_right_down = x_2, .y_left_up = y_1, .y_right_down = y_2};
+        const object_t tmp_figure2 = { .fill = true, .thinckness = 0, .x_left_up = x_3, .x_right_down = x_2, .y_left_up = y_3, .y_right_down = y_2};
+        const object_t tmp_figure3 = { .fill = true, .thinckness = 0, .x_left_up = x_3, .x_right_down = x_5, .y_left_up = y_3, .y_right_down = y_5};
+        const object_t tmp_figure4 = { .fill = true, .thinckness = 0, .x_left_up = x_1, .x_right_down = x_4, .y_left_up = y_1, .y_right_down = y_4};
+
+        draw_rectangle(data, bmih, tmp_figure1, color, color);
+        draw_rectangle(data, bmih, tmp_figure2, color, color);
+        draw_rectangle(data, bmih, tmp_figure3, color, color);
+        draw_rectangle(data, bmih, tmp_figure4, color, color);
     }
-    return 1;
 }
 
 /**
@@ -40,9 +48,11 @@ int rectangle_ornament(Rgb*** data, BitmapInfoHeader bmih, object_t figure, Rgb 
  *
  * Используется как функция рисования орнамента.
  * 
- * @param Получает на вход указатель на массив данных, фигуры, и InfoHeader а также цвет.
+ * @param data Массив пикселей.
+ * @param bmih Информация о файле.
+ * @param color Цвет кругов.
  */
-int circle_ornament(Rgb*** data, BitmapInfoHeader bmih, Rgb color) {
+void circle_ornament(Rgb*** data, BitmapInfoHeader bmih, Rgb color) {
     int x_c = (bmih.width + 1) / 2;
     int y_c = (bmih.height + 1) / 2;
     int min_radius = x_c < y_c ? x_c : y_c;
@@ -57,17 +67,19 @@ int circle_ornament(Rgb*** data, BitmapInfoHeader bmih, Rgb color) {
     };
 
     draw_circle(data, bmih, color, (Rgb){0,0,0}, tmp_figure);
-
 }
 
 /**
  * @brief Данная функция рисует орнамент из нескольких кругов на изображении.
  *
  * Используется как функция рисования орнамента.
- * 
- * @param Получает на вход указатель на массив данных, фигуры, и InfoHeader а также цвет, количество и толщину линии.
+ * @param data Массив пикселей.
+ * @param bmih Информация о файле.
+ * @param color Цвет кругов.
+ * @param thickness Толщина линии.
+ * @param count Количество.
  */
-int semi_circle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count, int thickness, Rgb color) {
+void semi_circle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count, int thickness, Rgb color) {
     const int width_step = (bmih.width + count * 2 - 1) / (count * 2);
     const int height_step = (bmih.height + count * 2 - 1) / (count * 2);
 
@@ -89,6 +101,7 @@ int semi_circle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count, int thic
         draw_circle(data, bmih, color, bg_color, horizontal_circle);
 
         horizontal_circle.y_center = bmih.height;  
+
         draw_circle(data, bmih, color, bg_color, horizontal_circle);
 
         object_t vertical_circle = {
@@ -98,6 +111,7 @@ int semi_circle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count, int thic
             .x_center = 0,
             .y_center = current_y
         };
+
         draw_circle(data, bmih, color, bg_color, vertical_circle);
 
         vertical_circle.x_center = bmih.width;
@@ -106,6 +120,4 @@ int semi_circle_ornament(Rgb*** data, BitmapInfoHeader bmih, int count, int thic
         current_x += 2 * width_step;
         current_y -= 2 * height_step;
     }
-
-    return 0;
 }

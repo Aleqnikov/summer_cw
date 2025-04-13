@@ -3,7 +3,6 @@
 
 #include "base_checker.h"
 
-bool check_dt_bmp(const char*);
 bool checker_color(object_t*);
 bool checker_thinckness(object_t*);
 bool checker_left_up(object_t*);

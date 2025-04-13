@@ -28,15 +28,6 @@ int base_checker(object_t* figure) {
         return 1;
     }
 
-    if (check_dt_bmp(figure->start_filename)) {
-        fprintf(stderr, "Error: Изначальный файл не имеет расширение .bmp!\n");
-        return 1;
-    }
-
-    if (check_dt_bmp(figure->finish_filename)) {
-        fprintf(stderr, "Error: Конечный файл не имеет расширение .bmp!\n");
-        return 1;
-    }
 
     int res_check = 0;
     switch (figure->mod) {
@@ -52,11 +43,10 @@ int base_checker(object_t* figure) {
         case circ:
             res_check = check_circle(figure);
             break;
-        case info:   // Избыточно, так как уже проверяется корректность имени файла.
+        case info:  
             res_check = check_info(figure);
             break;
         case help:
-            printf("sosat\n");
             break;
         default:
             fprintf(stderr, "Error: Не выбран режим работы!\n");
