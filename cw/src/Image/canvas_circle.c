@@ -7,6 +7,8 @@
 
 #include "canvas_circle.h"
 
+#define UPPER_ESTIMATE 8 // Верхняя оценка количества точек.
+
 /**
  * @brief Данная функция является реализацией алгоритма Брезенхема, добавляет точки в массив. Возвращает его длину.
  * 
@@ -46,7 +48,6 @@ int circ_bre(int rad, point_t* circle){
 
     return index;
 }
-
 
 /**
  * @brief Данная функция используется заполнения области внутри окружности цветом.
@@ -163,7 +164,7 @@ void draw_thicnless(Rgb*** data, circle_t big_circle, circle_t min_circle, Bitma
 int draw_circle(Rgb*** data, BitmapInfoHeader bmih, Rgb color, Rgb color_fill, object_t figure) {
 
     circle_t circle = {
-        .points = malloc(sizeof(point_t) * figure.radius * 8),
+        .points = malloc(sizeof(point_t) * figure.radius * UPPER_ESTIMATE),
         .radius = figure.radius,
         .x_center = figure.x_center,
         .y_center = figure.y_center,

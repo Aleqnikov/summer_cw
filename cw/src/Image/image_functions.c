@@ -45,7 +45,6 @@ bool read_bmp(const char* filename, BitmapFileHeader* file_header, BitmapInfoHea
         return 0;
     }
 
-
     if(info_header->compression != 0){
         fprintf(stderr, "Error: Программа не обрабатывает изображения со сжатием!\n");
         return 0;
@@ -115,8 +114,6 @@ bool write_bmp(const char* filename, const BitmapFileHeader* bmfh, const BitmapI
     return 0;
 }
 
-
-
 /**
  * @brief Функция которая печатает информацию headera файла.
  * 
@@ -131,7 +128,6 @@ void print_file_header(BitmapFileHeader bmfh){
     printf("reserved2:          \t%x (%hu)\n", bmfh.reserved2, bmfh.reserved2);
     printf("pixelArrOffset:     \t%x (%u)\n", bmfh.pixelArrOffset, bmfh.pixelArrOffset);
 }
-
 
 /**
  * @brief Функция которая печатает информацию headera информации.
@@ -153,6 +149,3 @@ void print_info_header(BitmapInfoHeader bmih){
     printf("colorsInColorTable: \t%x (%u)\n", bmih.colorsInColorTable, bmih.colorsInColorTable);
     printf("importantColorCount:\t%x (%u)\n", bmih.importantColorCount, bmih.importantColorCount);
 }
-
-
-

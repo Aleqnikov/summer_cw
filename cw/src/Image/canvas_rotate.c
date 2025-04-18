@@ -17,7 +17,7 @@ void get_diff(int* x, int* y, int angle, int weight_f, int heigt_f){
     {
     case 90:
         if(weight_f % 2 == 0 && heigt_f % 2 == 0){ *x = -1; *y = 0;}
-        if(weight_f % 2 == 0 && heigt_f % 2 != 0){ *x = 0; *y = -1;}
+        if(weight_f % 2 == 0 && heigt_f % 2 != 0){ *x = 0; *y = 1;}
         if(weight_f % 2 != 0 && heigt_f % 2 == 0){ *x = -1; *y = -1;}
         break;
     case 180:
