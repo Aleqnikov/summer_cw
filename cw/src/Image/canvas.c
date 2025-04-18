@@ -20,7 +20,7 @@ int canvas_logic(object_t figure) {
 
     if(!read_bmp(figure.start_filename, &bmfh, &bmih, &data)){
         fprintf(stderr, "Error: Не удалось считать данные из файла.\n");
-        return 0;
+        return 1;
     }
 
     Rgb color_fill = (Rgb){figure.color_fill_b, figure.color_fill_g, figure.color_fill_r};
@@ -49,8 +49,6 @@ int canvas_logic(object_t figure) {
             break;
         case rotate:
             data = rotate_area(&data, bmih, figure);
-            if (data == NULL)
-                return 1;
             break;
         case circ:
             draw_circle(&data, bmih, color, color_fill, figure);
@@ -61,7 +59,7 @@ int canvas_logic(object_t figure) {
             break;
     }
 
-    if (!write_bmp(figure.finish_filename, &bmfh, &bmih, data)) 
+    if (write_bmp(figure.finish_filename, &bmfh, &bmih, data)) 
         return 1;
     
     for (int i = 0; i < (bmih.height); i++) 

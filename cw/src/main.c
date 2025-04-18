@@ -66,7 +66,8 @@ int main(int argc, char* argv[]){
             return 43;
     }
 
-    canvas_logic(*figure);
+    if(canvas_logic(*figure))
+        return 44;
 
     free(figure);
 

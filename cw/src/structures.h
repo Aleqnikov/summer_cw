@@ -13,14 +13,6 @@
 #include <ctype.h>
 #include <string.h>
 #include <limits.h>
-#include <math.h>
-
-
-/**
- * @file main.с
- * @brief Весенняя курсовая работа
- */
-
 
 /**
  * @brief Перечисление режимов для орнамента.

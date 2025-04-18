@@ -11,4 +11,3 @@ int check_rotate(object_t* figure);
 int check_info(object_t*);
 
 #endif // CHECK_FUNCTIONS_H
-
